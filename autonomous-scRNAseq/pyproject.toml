@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flashseq-skill"
+version = "0.1.0"
+description = "Lab-automation skill: run FLASH-seq (low-input full-length scRNA-seq) on N cells end-to-end on a Hamilton/PyLabRobot deck."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "di" }]
+keywords = ["FLASH-seq", "scRNA-seq", "single-cell", "PyLabRobot", "Hamilton", "lab-automation"]
+dependencies = [
+    "pylabrobot>=0.2.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.urls]
+"Method (CC-BY)" = "https://dx.doi.org/10.17504/protocols.io.bp2l619rdvqe/v3"
+
+[tool.setuptools]
+packages = ["flashseq", "flashseq.procurement", "flashseq.manual", "flashseq.automation", "flashseq.readiness", "flashseq.ops", "flashseq.result"]
+
+[tool.setuptools.package-data]
+"*" = ["../config/*.yaml"]

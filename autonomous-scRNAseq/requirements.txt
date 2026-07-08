@@ -1,0 +1,10 @@
+# flashseq-skill runtime dependencies
+pylabrobot>=0.2.0     # Hamilton STAR/STARlet + thermocycler + Synergy H1 backends & simulator
+pyyaml>=6.0           # config/*.yaml (source of truth)
+
+# Optional:
+#   pandoc (system package)  -> Markdown -> PDF for the bench manual
+#   pytest                   -> `pytest -q` (tests also run via plain python)
+#
+# Stage 4 analysis pipeline calls these EXTERNAL tools (install separately, not pip):
+#   bcl2fastq (Illumina), umi_tools, STAR, samtools, featureCounts (subread), bbmap

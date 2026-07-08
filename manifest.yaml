@@ -1,0 +1,56 @@
+# =============================================================================
+# manifest.yaml - registry of assay modules, instruments, and autonomy layers for
+# the fullstack-omics project. Machine-readable roadmap. RESEARCH USE ONLY.
+# =============================================================================
+
+vision: >
+  Full-stack autonomous single-cell omics: "run this assay on N cells" to a result.
+  Cheap, fast, autonomous, molecule counting (UMIs), aimed at expert-level benchmarks
+  on commodity hardware (Hamilton + PyLabRobot + on-deck thermocycler + Synergy H1).
+
+modules:
+  - name: autonomous-scRNAseq
+    assay: "FLASH-seq UMI v3 (low-input full-length scRNA-seq + UMIs)"
+    doi: "10.17504/protocols.io.bp2l619rdvqe/v3"
+    license_method: "CC-BY"
+    path: "autonomous-scRNAseq"
+    status: "v0.1 - 4 stages + Rhodamine readiness + operator + fastq-to-analysis, end to end in PLR simulator"
+  - name: single-cell-wgs
+    assay: "ResolveDNA PTA WGA + NEBNext Ultra II"
+    status: "planned / separate work in progress"
+
+instruments:
+  - id: hamilton_star
+    role: "liquid handler"
+    integration: "PyLabRobot (STARBackend); simulator working"
+    status: "integrated"
+  - id: on_deck_thermocycler
+    role: "thermocycler"
+    integration: "PyLabRobot Thermocycler; backend TBD by model"
+    status: "integrated (sim); backend TODO by model"
+  - id: synergy_h1
+    role: "plate reader (PicoGreen quant, Rhodamine B readiness QC)"
+    integration: "PyLabRobot SynergyH1Backend; simulator working"
+    status: "integrated"
+  - id: facs_melody
+    role: "cell sorter (single-cell sort into lysis buffer)"
+    integration: "no open API - reverse-engineering required"
+    status: "TODO"
+  - id: humanoid_operator
+    role: "physical ops person (deck setup, press run, collect output)"
+    integration: "autonomous-scRNAseq flashseq/ops HumanoidOperator (command protocol)"
+    status: "experimental stub"
+
+autonomy_layers:
+  procurement:  "done: BOM to IDT/browser/PO channels to one human approval"
+  bring_up:     "partial: controller kit + connectivity resolver; FACS Melody TODO"
+  readiness:    "done: Rhodamine B liquid-handling CV check"
+  execution:    "done (sim): full FLASH-seq flow + QC gates/guards"
+  ops:          "human done; humanoid experimental"
+  analysis:     "done: fastq-to-analysis (bcl2fastq to umi_tools to STAR to featureCounts to umi_tools count to scanpy)"
+
+benchmarks:
+  goal: "expert parity at lower cost + hands-on time"
+  metrics: ["genes_per_cell", "umis_per_cell", "sensitivity", "doublet_rate", "empty_rate"]
+  target_datasets: null   # TODO: expert value - choose reference datasets + thresholds
+  cost_per_cell: null     # TODO

@@ -1,0 +1,297 @@
+# =============================================================================
+# reagents.yaml  --  FLASH-seq UMI v3 Bill of Materials (vendor / catalog #)
+# =============================================================================
+# Source: Materials section of FLASH-seq UMI v3 (DOI 10.17504/protocols.io.bp2l619rdvqe/v3).
+# EVERY catalog number is transcribed from the protocol. Where the source PDF's
+# OCR left a catalog number ambiguous, the field carries `verify: true` and a
+# `verify_note`. Do NOT order from a `verify: true` line without checking the DOI.
+#
+# `maps_to` links a reagent to a mix-component name in protocol_params.yaml so the
+# BOM generator can scale consumption by the per-well volume. Reagents with
+# `scale: per_plate` / `per_sample` / `once` are scaled by the quantifier instead.
+# RESEARCH USE ONLY.
+# =============================================================================
+
+meta:
+  currency: "USD"
+  note: "Pack sizes / list prices are NOT in the protocol; leave price null and fill from vendor quote."
+
+# -----------------------------------------------------------------------------
+# Cell lysis mix reagents.  src: Materials -- "REAGENTS - CELL LYSIS MIX"
+# -----------------------------------------------------------------------------
+lysis_reagents:
+  - name: "dNTP-Set (dATP/dCTP/dGTP/dTTP)"
+    vendor: "Carl Roth"
+    catalog: "K039.2"
+    maps_to: "dNTP mix (25 mM each)"
+    scale: by_volume
+  - name: "Triton X-100"
+    vendor: "Merck MilliporeSigma (Sigma-Aldrich)"
+    catalog: "X100-100ML"
+    maps_to: "Triton-X100 (10% v/v)"
+    scale: by_volume
+  - name: "Recombinant RNase Inhibitor (40 U/uL)"
+    vendor: "Takara Bio"
+    catalog: "2313B"
+    maps_to: "RNase inhibitor (40 U/uL)"   # shared with RT-PCR mix
+    scale: by_volume
+  - name: "dCTP (100 mM solution)"
+    vendor: "Thermo Fisher Scientific"
+    catalog: "10217016"
+    maps_to: "dCTP (100 mM)"
+    scale: by_volume
+  - name: "Betaine (5 M solution)"
+    vendor: "Merck MilliporeSigma (Sigma-Aldrich)"
+    catalog: "B0300-5VL"
+    maps_to: "Betaine (5 M)"               # shared with RT-PCR mix
+    scale: by_volume
+
+# -----------------------------------------------------------------------------
+# RT-PCR mix reagents.  src: Materials -- "REAGENTS - RT-PCR MIX"
+# -----------------------------------------------------------------------------
+rt_pcr_reagents:
+  - name: "2x Kapa HiFi HotStart ReadyMix"
+    vendor: "Kapa Biosystems (Roche)"
+    catalog: "KK2602"
+    maps_to: "Kapa HiFi HotStart ReadyMix (2x)"
+    scale: by_volume
+  - name: "SuperScript IV Reverse Transcriptase (200 U/uL)"
+    vendor: "Thermo Fisher Scientific"
+    catalog: "18090200"
+    maps_to: "SuperScript IV (200 U/uL)"
+    scale: by_volume
+  - name: "1 M MgCl2 (includes 0.1 M DTT)"
+    vendor: "Ambion (Thermo Fisher)"
+    catalog: "AM9530G"
+    maps_to: "MgCl2 (1 M)"                 # also the DTT source (0.1 M) for RT-PCR mix
+    scale: by_volume
+
+# -----------------------------------------------------------------------------
+# Magnetic beads (Sera-Mag SpeedBeads working solution).
+# src: Materials -- "REAGENTS - MAGNETIC BEADS SOLUTION PREPARATION"
+# (bead working-solution recipe is in the standard FLASH-seq protocol section 5)
+# -----------------------------------------------------------------------------
+bead_reagents:
+  - name: "Polyethylene glycol (PEG, MW=8000)"
+    vendor: "Merck MilliporeSigma (Sigma-Aldrich)"
+    catalog: "89510"
+    verify: true
+    verify_note: "OCR truncated to '89510-1K'; confirm pack-size suffix (e.g. 89510-1KG)."
+    scale: per_run
+  - name: "Sodium chloride (NaCl)"
+    vendor: "Merck MilliporeSigma (Sigma-Aldrich)"
+    catalog: "59222C-1000ML"
+    scale: per_run
+  - name: "Sera-Mag SpeedBeads Carboxylate-Modified Magnetic Particles (Hydrophilic)"
+    vendor: "Cytiva / GE Healthcare"
+    catalog: "45152105050250"
+    verify: true
+    verify_note: "OCR garbled ('GE 415 22 1050502 50'); 45152105050250 = hydrophilic SpeedBeads. Verify against DOI."
+    maps_to: "__beads__"
+    scale: by_volume
+  - name: "Sodium azide (NaN3)"
+    vendor: "Merck MilliporeSigma (Sigma-Aldrich)"
+    catalog: "S2002-25G"
+    scale: per_run
+  - name: "EDTA (0.5 M), pH 8.0"
+    vendor: "Life Technologies (Thermo Fisher)"
+    catalog: "AM9260G"
+    scale: per_run
+  - name: "Tris-HCl, pH 8.0 (UltraPure)"
+    vendor: "Thermo Fisher Scientific"
+    catalog: "15568025"
+    scale: per_run
+  - name: "Tween 20"
+    vendor: "Merck MilliporeSigma (Sigma-Aldrich)"
+    catalog: "P9416-100ML"
+    scale: per_run
+  - name: "Agencourt AMPure XP (optional commercial alternative to Sera-Mag)"
+    vendor: "Beckman Coulter"
+    catalog: "A63880"
+    optional: true
+    scale: by_volume
+
+# -----------------------------------------------------------------------------
+# Sample & library QC.  src: Materials -- "REAGENTS - SAMPLE & LIBRARY QC"
+# -----------------------------------------------------------------------------
+qc_reagents:
+  - name: "Quant-iT PicoGreen dsDNA Assay Kit"
+    vendor: "Life Technologies (Thermo Fisher)"
+    catalog: "P11496"
+    scale: per_plate
+  - name: "Nunc F96 MicroWell Polystyrene Plate, black"
+    vendor: "Thermo Fisher Scientific"
+    catalog: "237105"
+    scale: per_plate
+  - name: "Qubit Assay Tubes"
+    vendor: "Invitrogen (Thermo Fisher)"
+    catalog: "Q32856"
+    scale: per_sample
+  - name: "Qubit 1X dsDNA HS Assay Kit"
+    vendor: "Thermo Fisher Scientific"
+    catalog: "Q33231"
+    verify: true
+    verify_note: "OCR showed 'Q33 31 2'; Qubit 1X dsDNA HS is Q33230 (100)/Q33231 (500). Confirm assay count."
+    scale: per_sample
+  - name: "Bioanalyzer High Sensitivity DNA Chip"
+    vendor: "Agilent Technologies"
+    catalog: "5067-4626"
+    scale: per_plate
+
+# -----------------------------------------------------------------------------
+# Instrument-readiness QC (Rhodamine B liquid-handling check). NOT part of the
+# FLASH-seq protocol -- added by this skill for Step 1 instrument readiness.
+# (Black plates for the read are already listed above: Nunc F96 black, cat 237105.)
+# -----------------------------------------------------------------------------
+readiness_reagents:
+  - name: "Rhodamine B"
+    vendor: "Merck MilliporeSigma (Sigma-Aldrich)"
+    catalog: "83689"
+    verify: true
+    verify_note: "Not in the protocol (added by this skill). Confirm SKU/grade -- e.g. Sigma 83689 (Rhodamine B for fluorescence) or R6626."
+    note: "Make a working solution (~10 uM); tune conc + H1 gain so signal is in-range. See config/readiness.yaml."
+    scale: per_run
+
+# -----------------------------------------------------------------------------
+# Tagmentation with Nextera XT.  src: Materials -- "REAGENTS - TAGMENTATION..."
+# -----------------------------------------------------------------------------
+tagmentation_reagents:
+  - name: "Nextera XT DNA Library Preparation Kit"
+    vendor: "Illumina"
+    catalog: "FC-131-1096"
+    note: "Supplies ATM, TD, NPM. 96-sample kit; scale kit count to plate count."
+    scale: per_plate
+  - name: "Nextera XT Index Kit v2 Set A"
+    vendor: "Illumina"
+    catalog: "FC-131-2001"
+    scale: per_plate
+  - name: "Nextera XT Index Kit v2 Set B"
+    vendor: "Illumina"
+    catalog: "FC-131-2002"
+    scale: per_plate
+  - name: "Nextera XT Index Kit v2 Set C"
+    vendor: "Illumina"
+    catalog: "FC-131-2003"
+    verify: true
+    verify_note: "OCR truncated the set C/D catalog numbers; A/B/C/D = FC-131-2001..2004. Confirm C = 2003."
+    scale: per_plate
+  - name: "Nextera XT Index Kit v2 Set D"
+    vendor: "Illumina"
+    catalog: "FC-131-2004"
+    verify: true
+    verify_note: "OCR truncated; confirm D = FC-131-2004."
+    scale: per_plate
+
+# -----------------------------------------------------------------------------
+# General consumables.  src: Materials -- "GENERAL CONSUMABLES"
+# -----------------------------------------------------------------------------
+consumables:
+  - name: "RNaseAWAY Surface Decontaminant, Bottle"
+    vendor: "Thermo Fisher Scientific"
+    catalog: "7000TS1"
+    scale: per_run
+  - name: "Adhesive PCR Plate Seals"
+    vendor: "Thermo Fisher Scientific"
+    catalog: "AB0558"
+    scale: per_plate
+  - name: "Aluminium foil seals (for -80 C storage)"
+    vendor: "VWR International (Avantor)"
+    catalog: "391-1281"
+    scale: per_plate
+  - name: "Twin.Tec PCR plates 384 (LoBind, colourless)"
+    vendor: "Eppendorf"
+    catalog: "0030129547"
+    note: "384-well plate. For the Hamilton 96-well default, substitute a 96-well LoBind plate."
+    scale: per_plate
+  - name: "UltraPure DNase/RNase-Free Distilled Water"
+    vendor: "Invitrogen (Thermo Fisher)"
+    catalog: "10977-049"
+    scale: per_run
+  - name: "Safe-Lock Tubes 1.5 mL, PCR clean, DNA LoBind"
+    vendor: "Eppendorf"
+    catalog: "0030108051"
+    scale: per_sample
+  - name: "Ethanol (molecular biology grade, >=99.8%)"
+    vendor: "Merck MilliporeSigma (Sigma-Aldrich)"
+    catalog: "51976-500ML-F"
+    scale: per_run
+
+# -----------------------------------------------------------------------------
+# Custom oligonucleotides (IDT-orderable).  src: Materials -- "OLIGONUCLEOTIDES"
+# All carry 5'-biotin (/5Biosg/) and a phosphorothioate bond (*) between the last
+# two nucleotides; ordered desalted (HPLC optional). rG = riboguanosine.
+#
+# SAFETY: The RT-PCR oligo sequences below are transcribed from an OCR'd table and
+# are marked verify: true. The 48 i7 + 32 i5 enrichment adaptor sequences are NOT
+# transcribed (OCR unreliable across 80 rows) -- copy them from the DOI. This is
+# the `# TODO: expert value` case from the build spec: do not order from garbled
+# sequence. Order the Nextera XT Index Kit v2 sets above unless you need >96-plex.
+# -----------------------------------------------------------------------------
+oligos_rt_pcr:
+  - name: "STRT-P1-T31"
+    vendor: "IDT (custom synthesis)"
+    catalog: "custom"
+    scale: once
+    sequence_5to3: "/5Biosg/AATGATACGGCGACCACCGTTTTTTTTTTTTTTTTTTTTTTTTATCGTTTTTTTT"
+    modifications: "5'-biotin (/5Biosg/); phosphorothioate at 3' terminus; desalted"
+    note: "oligo-dT that does NOT end with 'VN' (unlike standard SMART-seq oligo-dT)."
+    used_in: "lysis_mix"
+    working_conc_uM: 100
+    verify: true
+    verify_note: "Sequence transcribed from OCR table -- verify exact length of poly-T against DOI."
+  - name: "TSO-UMI"
+    vendor: "IDT (custom synthesis)"
+    catalog: "custom"
+    scale: once
+    sequence_5to3: "/5Biosg/AAGCANNNNNNNNCTAACrGrGrG"
+    modifications: "5'-biotin; rGrGrG (riboG); 8 nt UMI (N8); desalted"
+    note: >
+      OCR of this row was unreliable. Structure is constrained by the umi_tools
+      regex in Stage 12: ...AAGCAGTGGTATCAACGCAGAGT | (UMI x8) | CTAACGG. Treat the
+      sequence here as a placeholder.
+    used_in: "rt_pcr_mix"
+    working_conc_uM: 100
+    verify: true
+    verify_note: "TODO: expert value -- copy exact TSO-UMI sequence from the DOI before ordering."
+  - name: "Tn5-ISPCR-F"
+    vendor: "IDT (custom synthesis)"
+    catalog: "custom"
+    scale: once
+    sequence_5to3: "TCGTCGGCAGCGTCAGTGGTATCAACGCAGAGT"
+    modifications: "phosphorothioate at 3' terminus; desalted (no 5'-biotin on this one per table)"
+    used_in: "rt_pcr_mix"
+    working_conc_uM: 100
+    verify: true
+    verify_note: "OCR-garbled tail; verify full sequence against DOI."
+  - name: "DI-PCR-P1A-R"
+    vendor: "IDT (custom synthesis)"
+    catalog: "custom"
+    scale: once
+    sequence_5to3: "AATGATACGGCGACCACCGA"
+    modifications: "phosphorothioate at 3' terminus; desalted"
+    used_in: "rt_pcr_mix"
+    working_conc_uM: 100
+    verify: true
+    verify_note: "OCR-garbled; verify full sequence against DOI."
+
+# NOTE ON INDEX OLIGOS (standard library prep):
+# For a STANDARD run (<=96-plex) you do NOT order custom index oligos. The Nextera
+# XT Index Kit v2 (FC-131-2001..2004, listed under tagmentation_reagents) already
+# supplies the bog-standard i7 (N7xx) + i5 (S5xx) adaptors -- that's all the index
+# oligos you need. The only genuinely CUSTOM, IDT-ordered oligos are the 4 RT-PCR
+# oligos above (STRT-P1-T31, TSO-UMI, Tn5-ISPCR-F, DI-PCR-P1A-R). The extra set
+# below is OPTIONAL and only needed to multiplex beyond the kit's 96 combinations.
+oligos_enrichment_extra:
+  optional_for_higher_plex_only: true
+  description: >
+    OPTIONAL extra non-UDI index set for >96-plex ONLY (standard prep uses the
+    Nextera XT Index Kit v2 above): 48 x Nextera_extra_i7 (N7xx) + 32 x
+    Nextera_extra_i5 (S5xx). All 5'-biotin + terminal phosphorothioate, desalted.
+    Prepare working dilution plates of unique N7xx+S5xx combos at 5 uM each
+    (src: Stage 9 index adaptor conc).
+  i7_count: 48
+  i5_count: 32
+  working_conc_uM: 5
+  sequences: null
+  verify: true
+  verify_note: "TODO: expert value -- 80 sequences omitted (OCR unreliable). Only needed for >96-plex; copy sequences from the DOI oligo tables before ordering."

@@ -1,0 +1,102 @@
+# =============================================================================
+# instruments.yaml  --  connectivity registry + controller bring-up kit
+# =============================================================================
+# Drives (a) the AUTOMATION backend selection and (b) PROCUREMENT's connectivity
+# resolver + first-time-buyer controller kit.
+#
+# RULE (from build spec): never hardcode port types. Physical connector types
+# that are not verified are marked `# TODO: verify interface`. PLR backend/driver
+# names ARE verified against the installed pylabrobot package. Add real values
+# here once you confirm each instrument's port against its manual, then the
+# manual's wiring diagram updates automatically.
+# =============================================================================
+
+meta:
+  topology: >
+    Raspberry Pi runs PyLabRobot and connects to each instrument locally (USB /
+    serial / ethernet). The host / agent talks to the Pi over ethernet. Swap any
+    backend from `sim` to the hardware backend named below when hardware is present.
+
+# -----------------------------------------------------------------------------
+# Instruments on the deck.  PLR backends verified present in pylabrobot 0.2.x.
+# -----------------------------------------------------------------------------
+instruments:
+
+  hamilton_star:
+    make_model: "Hamilton Microlab STAR / STARlet"
+    role: "liquid handler"
+    plr:
+      deck: "STARLetDeck"          # verified: pylabrobot.resources.hamilton.STARLetDeck
+                                    # (use STARDeck for a full STAR)
+      backend_hardware: "STARBackend"   # verified: pylabrobot.liquid_handling.backends.STARBackend
+      backend_sim: "LiquidHandlerChatterboxBackend"  # verified: hardware-free simulation
+    connectivity:
+      instrument_interface: "usb"           # Hamilton STAR enumerates as a USB device
+      instrument_connector: "# TODO: verify interface"  # likely USB-B; confirm on the unit
+      driver_notes: "PLR STARBackend uses libusb (PyUSB). Confirm VID/PID + firmware version."
+      host_side: "pi"                        # cable runs instrument -> Raspberry Pi
+      pi_connector: "usb_a"
+
+  on_deck_thermocycler:
+    make_model: "# TODO: expert value -- on-deck thermocycler make/model"
+    role: "thermocycler"
+    plr:
+      backend_hardware: "# TODO: verify -- pick the PLR backend that matches your unit"
+      backend_hardware_options: ["ProflexBackend", "OpentronsThermocyclerBackend", "ATCBackend"]
+      backend_sim: "ThermocyclerChatterboxBackend"   # verified: hardware-free simulation
+    connectivity:
+      instrument_interface: "# TODO: verify interface"   # serial/USB/ethernet depends on model
+      instrument_connector: "# TODO: verify interface"
+      host_side: "pi"
+      pi_connector: "# TODO: verify interface"
+      driver_notes: >
+        ProFlex is typically serial/USB; Opentrons module is USB via the OT-2;
+        Inheco ATC is serial. Set backend_hardware once the model is known.
+
+  synergy_h1:
+    make_model: "BioTek Synergy H1"
+    role: "plate reader (PicoGreen dsDNA quant / QC)"
+    plr:
+      backend_hardware: "SynergyH1Backend"   # verified: pylabrobot.plate_reading.SynergyH1Backend
+      backend_sim: "PlateReaderChatterboxBackend"   # verified (this skill wraps it with a
+                                                     # PicoGreen signal model -- see automation)
+    connectivity:
+      instrument_interface: "usb"            # Synergy H1 connects to a controller PC/Pi over USB
+      instrument_connector: "# TODO: verify interface"  # likely USB-B; confirm on the unit
+      host_side: "pi"
+      pi_connector: "usb_a"
+      driver_notes: "Confirm Gen5 vs direct-USB control path for the SynergyH1Backend."
+
+# -----------------------------------------------------------------------------
+# First-time-buyer controller kit (only spec'd if the user has no controller).
+# These are ENGINEERING RECOMMENDATIONS, not protocol values -- confirm current
+# part numbers/compatibility before buying. Port types come from `instruments`
+# above via the connectivity resolver; unknowns propagate as TODOs.
+# -----------------------------------------------------------------------------
+controller_kit:
+  recommend_when: "no existing PLR controller / Raspberry Pi on the bench"
+  core:
+    - {name: "Raspberry Pi 5 (8 GB) [or Pi 4 4GB+]", role: "runs PyLabRobot", qty: 1,
+       note: "recommendation -- verify current model/availability"}
+    - {name: "Official USB-C PSU (27W for Pi 5 / 15W for Pi 4)", role: "power", qty: 1}
+    - {name: "microSD card 32GB+ preloaded with the PLR image", role: "OS + PyLabRobot", qty: 1,
+       note: "flash Raspberry Pi OS + pylabrobot; image build is a separate step"}
+    - {name: "Case with active cooling (fan/heatsink)", role: "thermal", qty: 1}
+    - {name: "Powered USB hub (external PSU)", role: "power instrument USB links", qty: 1,
+       note: "instruments should not draw from the Pi's USB bus"}
+  networking:
+    - {name: "Ethernet cable (Pi -> lab switch/host)", role: "host<->Pi link", qty: 1}
+    - {name: "Ethernet switch (only if host + Pi + others share a segment)", role: "network", qty: 1,
+       optional: true}
+
+# -----------------------------------------------------------------------------
+# Cable catalog -- generic connector-pair -> cable type. The connectivity
+# resolver reads instrument+Pi connectors from `instruments` and emits the right
+# cable. `# TODO: verify interface` on either end yields a flagged cable line.
+# -----------------------------------------------------------------------------
+cable_catalog:
+  usb_a__usb_b:      "USB-A (Pi) <-> USB-B (instrument) cable"
+  usb_a__usb_c:      "USB-A (Pi) <-> USB-C (instrument) cable"
+  usb_a__usb_serial: "USB-A (Pi) <-> RS-232 serial via FTDI USB-to-serial adapter"
+  usb_a__ethernet:   "Instrument uses ethernet -- connect to switch, not a Pi USB port"
+  ethernet__ethernet: "Ethernet patch cable"
