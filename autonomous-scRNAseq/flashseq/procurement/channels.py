@@ -2,7 +2,7 @@
 
 Channels (from the build spec):
   idt_api  -- direct vendor API for custom FLASH-seq oligos (and Quartzy where used).
-  browser  -- browser-automation agent (Claude in Chrome) fills carts on vendor sites
+  browser  -- browser-automation agent fills carts on vendor sites
               that have web storefronts (Thermo, Sigma/Millipore, Takara, NEB, Illumina).
   po       -- PO / requisition fallback for institutional punch-out (Coupa/Jaggaer).
 
@@ -86,7 +86,7 @@ def approval_summary_markdown(
 
     channel_titles = {
         IDT_API: "Direct vendor API (IDT oligos / Quartzy)",
-        BROWSER: "Browser-automation agent (Claude in Chrome fills carts)",
+        BROWSER: "Browser-automation agent (fills carts)",
         PO: "PO / requisition (institutional punch-out: Coupa / Jaggaer)",
     }
     for ch in (IDT_API, BROWSER, PO):
@@ -129,7 +129,7 @@ def place_orders(items: list[BomItem], *, approved: bool) -> dict:
     """DRY-RUN order placement. Refuses unless the human approved. Never checks out live.
 
     Returns a record of what WOULD be ordered per channel. Wiring the live IDT API,
-    the Claude-in-Chrome cart flow, and the Coupa/Jaggaer PO submission are external
+    the browser-agent cart flow, and the Coupa/Jaggaer PO submission are external
     dependencies -- intentionally not implemented in v1.
     """
     if not approved:
@@ -142,6 +142,6 @@ def place_orders(items: list[BomItem], *, approved: bool) -> dict:
         record.setdefault(it.channel or PO, []).append(f"{it.name} [{it.catalog}] x {it.quantity}")
     return {
         "status": "DRY_RUN (no live orders placed)",
-        "todo": "Wire live channels: IDT oligo API, Claude-in-Chrome carts, Coupa/Jaggaer PO.",
+        "todo": "Wire live channels: IDT oligo API, browser-agent carts, Coupa/Jaggaer PO.",
         "orders_by_channel": record,
     }

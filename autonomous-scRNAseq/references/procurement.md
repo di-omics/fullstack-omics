@@ -14,7 +14,7 @@ build_bom(p)  ->  route_channels(items)  ->  approval_summary_markdown(...)  -> 
      bulk unit; custom oligos → one synthesis order.
 2. **Channels** (`channels.py`) route each item:
    - `idt_api` - custom FLASH-seq oligos (and Quartzy where the lab routes oligos).
-   - `browser` - vendor storefronts a Claude-in-Chrome agent can drive (Thermo,
+   - `browser` - vendor storefronts a browser-agent agent can drive (Thermo,
      Sigma/Millipore, Takara, NEB, Illumina, Invitrogen…).
    - `po` - institutional punch-out (Coupa/Jaggaer) for everything else.
 3. **Approval** - one Markdown summary grouped by channel, with an

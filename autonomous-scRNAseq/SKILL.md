@@ -75,7 +75,7 @@ deck and press run). `python scripts/run_all.py --operator humanoid`.
 
 ### 1. Procurement (`flashseq/procurement/`)
 Builds the BOM scaled to N, routes each item to a channel - **IDT oligo API** for
-custom oligos, **browser-automation agent** (Claude in Chrome) for vendor
+custom oligos, **browser-automation agent** for vendor
 storefronts, **PO/requisition** (Coupa/Jaggaer) fallback - and emits ONE "approve
 to purchase" summary. **Nothing is ordered without a single human approval**, and
 even with `--approve`, order placement is a DRY RUN in v1 (live channels are
