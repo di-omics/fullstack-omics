@@ -4,9 +4,9 @@ The whole-genome sequencing protocol starts with cells sorted into 3 uL of Cell 
 (FACS/FANS), with column 1 reserved for controls (NTC / 1 ng / 100 pg / 10 pg gDNA)
 per the protocol's plate map (Figure 5). src: [A] Single-Cell Isolation + Best Practices.
 
-The BD FACS Melody is NOT a PyLabRobot device and its control plane is being
-reverse-engineered by the user (see instruments.yaml / the user's GitHub -- URL
-NEEDED). So:
+The BD FACS Melody is NOT a PyLabRobot device: BD FACSChorus is a closed GUI with no
+open API, so its control plane is reverse-engineered with computer vision + UI
+automation of FACSChorus (di-omics/lab-cv + awesome-wetlab-cv). So:
   - `FacsMelodySimBackend` SIMULATES a sort: it deposits one cell per sample well with
     a modelled sort efficiency (some wells miss -> realistic drop-outs), and places the
     control wells exactly per the protocol map.
@@ -146,15 +146,16 @@ class FacsMelodySimBackend(CellSorterBackend):
 
 
 class FacsMelodyHardwareBackend(CellSorterBackend):  # pragma: no cover - RE pending
-    """Real BD FACS Melody -- control plane is the user's reverse-engineering TODO."""
+    """Real BD FACS Melody -- driven by CV/UI automation of the FACSChorus GUI."""
 
     name = "facs_melody_hardware"
 
     async def sort(self, plan: WellPlan) -> SortResult:
         raise NotImplementedError(
-            "FACS Melody hardware control is not wired yet. The Melody is driven by BD "
-            "FACSChorus; the user is reverse-engineering its control plane (see the user's "
-            "GitHub -- URL NEEDED). Wire the RE'd client here, then set instruments.yaml "
+            "FACS Melody hardware control is not wired yet. BD FACSChorus has no open API, "
+            "so the plan is to drive it with computer vision + UI automation (see the "
+            "di-omics CV stack: github.com/di-omics/lab-cv and github.com/di-omics/"
+            "awesome-wetlab-cv). Wire that client here, then set instruments.yaml "
             "facs_melody.plr.backend_hardware."
         )
 

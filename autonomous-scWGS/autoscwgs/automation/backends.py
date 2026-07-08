@@ -51,7 +51,8 @@ def _resolve_hardware(p: Params) -> BackendBundle:  # pragma: no cover - needs h
             raise RuntimeError(
                 f"instruments.yaml is not ready for hardware at {where}: {val!r}. "
                 "Fill in the verified backend/interface before running mode='hardware'. "
-                "(The Hamilton ODTC has no PLR 0.2.x backend yet -- wire one first.)"
+                "(The Hamilton ODTC needs an Inheco TCP/SiLA2 backend wired into the "
+                "di-omics/pylabrobot fork first.)"
             )
         return s
 

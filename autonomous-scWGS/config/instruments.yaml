@@ -41,20 +41,21 @@ instruments:
     make_model: "Hamilton On-Deck Thermal Cycler (ODTC, Inheco-built)"
     role: "on-deck thermocycler (WGA 30C 2.5h; End Prep; PCR enrichment)"
     plr:
-      backend_hardware: "# TODO: verify -- no dedicated ODTC backend in pylabrobot 0.2.x"
-      backend_hardware_options: ["ATCBackend", "ProflexBackend", "OpentronsThermocyclerBackend"]
+      # DECISION: wire a real Inheco ODTC backend (TCP/IP, SiLA2) into the di-omics
+      # pylabrobot fork, then set the class name here. Kept as TODO so hardware mode
+      # refuses cleanly until the fork backend exists.
+      backend_hardware: "# TODO: wire InhecoODTCBackend (TCP/IP, SiLA2) in di-omics/pylabrobot fork, then set here"
       backend_sim: "ThermocyclerChatterboxBackend"   # verified: hardware-free simulation
     connectivity:
-      instrument_interface: "# TODO: verify interface"   # ODTC is typically TCP/IP (ethernet)
-                                                         # or serial via the Inheco controller
-      instrument_connector: "# TODO: verify interface"
+      instrument_interface: "ethernet"        # Inheco ODTC is networked (TCP/IP, SiLA2)
+      instrument_connector: "ethernet"
       host_side: "pi"
-      pi_connector: "# TODO: verify interface"
+      pi_connector: "ethernet"
       driver_notes: >
-        The Hamilton ODTC is an Inheco device usually driven over TCP/IP through the
-        Inheco Single/ Multi TEC controller, or integrated via the STAR firmware. PLR
-        0.2.x has no ODTC backend -- wire one (or drive via the Inheco SiLA/TCP API) and
-        set backend_hardware. ATCBackend is the closest Inheco device but is NOT the ODTC.
+        The Hamilton ODTC is an Inheco device driven over TCP/IP (SiLA2). Plan: implement
+        an InhecoODTCBackend (TCP/IP + SiLA2 client) in the di-omics/pylabrobot fork
+        (https://github.com/di-omics/pylabrobot), then set backend_hardware to it. PLR
+        0.2.x ships no ODTC backend. Networked -> connect the ODTC to the lab switch.
 
   synergy_h1:
     make_model: "BioTek Synergy H1"
@@ -74,19 +75,25 @@ instruments:
     make_model: "BD FACS Melody (cell sorter)"
     role: "single-cell / nuclei sort into 3 uL Cell Buffer per well (up front)"
     plr:
-      backend_hardware: "# TODO: expert value -- FACS Melody control-plane RE (user's TODO)"
+      # DECISION: no open API. Reverse-engineer the sort via computer-vision + UI
+      # automation of BD FACSChorus (see di-omics/lab-cv + awesome-wetlab-cv), wired
+      # into FacsMelodyHardwareBackend (autoscwgs/sorting/facs.py). Kept as TODO until
+      # that client exists.
+      backend_hardware: "# TODO: CV/UI-automation client of FACSChorus (di-omics/lab-cv, awesome-wetlab-cv) -> FacsMelodyHardwareBackend"
       backend_sim: "FacsMelodySimBackend"            # this skill's sim (see automation/backends.py)
     connectivity:
-      instrument_interface: "# TODO: verify interface"   # BD Melody is normally driven by BD
-                                                         # FACSChorus on a dedicated workstation
-      instrument_connector: "# TODO: verify interface"
+      instrument_interface: "cv_ui_automation"       # not a cabled control path; driven at the
+                                                      # FACSChorus workstation GUI via CV/UI automation
+      instrument_connector: "n/a"
       host_side: "workstation"
-      pi_connector: "# TODO: verify interface"
+      pi_connector: "n/a"
       driver_notes: >
-        Not a PyLabRobot device. The BD FACS Melody is driven by BD FACSChorus software;
-        the user is reverse-engineering its control plane (see the user's GitHub -- URL
-        NEEDED). Until then, sorting is SIMULATED: the sim deposits N cells with a modelled
-        sort efficiency and lays out the control wells per protocol Figure 5.
+        Not a PyLabRobot device. The BD FACS Melody is driven by BD FACSChorus (a closed GUI,
+        no open API). Control is reverse-engineered with computer vision + UI automation of
+        FACSChorus -- see the di-omics CV stack: https://github.com/di-omics/lab-cv and
+        https://github.com/di-omics/awesome-wetlab-cv. Until that client is wired into
+        FacsMelodyHardwareBackend, sorting is SIMULATED (deposits N cells at a modelled sort
+        efficiency; lays out the control wells per protocol Figure 5).
 
 # -----------------------------------------------------------------------------
 # Optional: humanoid robot as the "automation ops person" (experimental).
@@ -131,3 +138,4 @@ cable_catalog:
   usb_a__usb_serial: "USB-A (Pi) <-> RS-232 serial via FTDI USB-to-serial adapter"
   usb_a__ethernet:   "Instrument uses ethernet -- connect to switch, not a Pi USB port"
   ethernet__ethernet: "Ethernet patch cable"
+  n/a__n/a:          "no cable -- controlled at the FACSChorus workstation (CV/UI automation)"

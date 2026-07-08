@@ -30,9 +30,10 @@ not redistribute the pipeline. BJ-WGS requires Sentieon (commercial).
 ### Sort -- BD FACS Melody
 > BD Biosciences. BD FACS Melody cell sorter (driven by BD FACSChorus).
 
-The Melody control plane is being **reverse-engineered by the repository owner**; until
-that is wired, sorting is **simulated** in this skill. (The owner's GitHub reference for
-the RE work is needed -- see README "Open questions".)
+BD FACSChorus has no open API, so the Melody control plane is reverse-engineered with
+**computer vision + UI automation** of FACSChorus (di-omics CV stack: `lab-cv`,
+`awesome-wetlab-cv`). Until that client is wired into `FacsMelodyHardwareBackend`, sorting
+is **simulated** in this skill. See the README "Integration roadmap".
 
 ## What this repo does and does NOT do
 

@@ -4,11 +4,10 @@ Autonomous **single-cell genomics** on a Hamilton / PyLabRobot deck - from *inst
 purchase* -> *FACS sort* -> *automated execution* -> *result*, running entirely in the
 PyLabRobot **simulator** with no hardware.
 
-> **Naming note:** the repo name reflects the umbrella series ("autonomous single-cell
-> ...seq"). The **first implemented protocol is single-cell WGS (DNA)**, not RNA:
+> **Part of [`fullstack-omics`](..).** This is the single-cell **WGS (DNA)** module:
 > **whole-genome amplification** whole-genome amplification (the vendor) + **NEBNext Ultra II** library
-> prep (NEB), with a **BD FACS Melody** sort up front. Sibling repo: `flashseq-skill`
-> (FLASH-seq scRNA-seq). Rename the repo if you'd prefer `autonomous-scWGS`.
+> prep (NEB), with a **BD FACS Melody** sort up front. Its sibling module
+> [`autonomous-scRNAseq`](../autonomous-scRNAseq) is the FLASH-seq scRNA-seq pipeline.
 
 > **RESEARCH USE ONLY - not clinically validated.** The methods are **proprietary vendor
 > protocols** (whole-genome sequencing the kit user guide; NEBNext E7645) reproduced for automation
@@ -76,17 +75,22 @@ Per-stage:
 - `config/instruments.yaml` - connectivity registry + PLR backends + controller kit.
 - `config/readiness.yaml` - Rhodamine B QC settings (engineering defaults; `# expert-tunable`).
 
-## Open questions (for the repo owner)
+## Integration roadmap (hardware wiring)
 
-- **FACS Melody control plane:** the RE work is your TODO - drop the client into
-  `autoscwgs/sorting/facs.py` (`FacsMelodyHardwareBackend`). *Your GitHub reference for
-  the RE is needed.*
-- **Hamilton ODTC backend:** PyLabRobot 0.2.x has no ODTC backend; wire one (Inheco
-  TCP/SiLA) and set `instruments.yaml -> hamilton_odtc.plr.backend_hardware`.
+Everything above runs in the PyLabRobot simulator today. To take it to hardware:
+
+- **FACS Melody control plane:** BD FACSChorus is a closed GUI with no open API, so the
+  sort is reverse-engineered by **computer vision + UI automation** of FACSChorus - see the
+  di-omics CV stack, [`lab-cv`](https://github.com/di-omics/lab-cv) and
+  [`awesome-wetlab-cv`](https://github.com/di-omics/awesome-wetlab-cv). Drop that client into
+  `autoscwgs/sorting/facs.py` (`FacsMelodyHardwareBackend`); the simulator seam is unchanged.
+- **Hamilton ODTC backend:** PyLabRobot 0.2.x has no ODTC backend. Wire a real **Inheco ODTC
+  backend (TCP/IP, SiLA2)** into the di-omics [`pylabrobot`](https://github.com/di-omics/pylabrobot)
+  fork, then set `instruments.yaml -> hamilton_odtc.plr.backend_hardware`.
 - **NEBNext input / cycles / adaptor dilution / insert size:** `# expert-tunable` with the
-  guide default kept - tune on real data.
+  guide default kept - tune on real data (not a blocker).
 - **Qubit-on-H1 ex/em:** the guides use a Qubit fluorometer; reading that chemistry on the
-  H1 needs a standard curve (`# TODO: verify` ex/em).
+  H1 needs a standard curve (ex/em ~485/530, `# TODO: verify` on your filter set).
 
 See `references/` for architecture, procurement, automation, and the protocol-stage tables.
-Sibling: [`flashseq-skill`](../flashseq-skill) (same series, CC-BY method).
+Sibling module: [`autonomous-scRNAseq`](../autonomous-scRNAseq) (FLASH-seq scRNA-seq, CC-BY method).
