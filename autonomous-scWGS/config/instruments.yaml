@@ -1,0 +1,133 @@
+# =============================================================================
+# instruments.yaml  --  connectivity registry + controller bring-up kit
+# =============================================================================
+# Drives (a) AUTOMATION backend selection and (b) PROCUREMENT's connectivity
+# resolver + first-time-buyer controller kit + the manual's wiring diagram.
+#
+# RULE: never hardcode port types. Unverified physical connectors are marked
+# `# TODO: verify interface`. PLR backend/driver names ARE verified against the
+# installed pylabrobot (0.2.x). Fill real values once confirmed against each
+# instrument's manual, then the wiring diagram updates automatically.
+# =============================================================================
+
+meta:
+  topology: >
+    A Raspberry Pi runs PyLabRobot and connects to each deck instrument locally
+    (USB / serial / ethernet). The host / agent talks to the Pi over ethernet.
+    Swap any backend from `sim` to the hardware backend named below when hardware
+    is present.
+
+# -----------------------------------------------------------------------------
+# Instruments.  PLR backends verified present in pylabrobot 0.2.x.
+# -----------------------------------------------------------------------------
+instruments:
+
+  hamilton_star:
+    make_model: "Hamilton Microlab STAR"
+    role: "liquid handler (all reagent additions, beads, transfers, pooling)"
+    plr:
+      deck: "STARLetDeck"                 # verified: pylabrobot.resources.hamilton.STARLetDeck
+                                          # (use STARDeck for a full STAR)
+      backend_hardware: "STARBackend"     # verified: pylabrobot.liquid_handling.backends.STARBackend
+      backend_sim: "LiquidHandlerChatterboxBackend"   # verified: hardware-free simulation
+    connectivity:
+      instrument_interface: "usb"                    # STAR enumerates as USB
+      instrument_connector: "# TODO: verify interface"   # likely USB-B; confirm on the unit
+      host_side: "pi"
+      pi_connector: "usb_a"
+      driver_notes: "PLR STARBackend uses libusb (PyUSB). Confirm VID/PID + firmware."
+
+  hamilton_odtc:
+    make_model: "Hamilton On-Deck Thermal Cycler (ODTC, Inheco-built)"
+    role: "on-deck thermocycler (WGA 30C 2.5h; End Prep; PCR enrichment)"
+    plr:
+      backend_hardware: "# TODO: verify -- no dedicated ODTC backend in pylabrobot 0.2.x"
+      backend_hardware_options: ["ATCBackend", "ProflexBackend", "OpentronsThermocyclerBackend"]
+      backend_sim: "ThermocyclerChatterboxBackend"   # verified: hardware-free simulation
+    connectivity:
+      instrument_interface: "# TODO: verify interface"   # ODTC is typically TCP/IP (ethernet)
+                                                         # or serial via the Inheco controller
+      instrument_connector: "# TODO: verify interface"
+      host_side: "pi"
+      pi_connector: "# TODO: verify interface"
+      driver_notes: >
+        The Hamilton ODTC is an Inheco device usually driven over TCP/IP through the
+        Inheco Single/ Multi TEC controller, or integrated via the STAR firmware. PLR
+        0.2.x has no ODTC backend -- wire one (or drive via the Inheco SiLA/TCP API) and
+        set backend_hardware. ATCBackend is the closest Inheco device but is NOT the ODTC.
+
+  synergy_h1:
+    make_model: "BioTek Synergy H1"
+    role: "plate reader (dsDNA fluorometric quant of WGA product + libraries; Rhodamine QC)"
+    plr:
+      backend_hardware: "SynergyH1Backend"           # verified: pylabrobot.plate_reading.SynergyH1Backend
+      backend_sim: "PlateReaderChatterboxBackend"    # verified (wrapped with a dsDNA signal
+                                                      # model -- see automation/qubit.py)
+    connectivity:
+      instrument_interface: "usb"
+      instrument_connector: "# TODO: verify interface"   # likely USB-B; confirm on the unit
+      host_side: "pi"
+      pi_connector: "usb_a"
+      driver_notes: "Confirm Gen5 vs direct-USB control path for SynergyH1Backend."
+
+  facs_melody:
+    make_model: "BD FACS Melody (cell sorter)"
+    role: "single-cell / nuclei sort into 3 uL Cell Buffer per well (up front)"
+    plr:
+      backend_hardware: "# TODO: expert value -- FACS Melody control-plane RE (user's TODO)"
+      backend_sim: "FacsMelodySimBackend"            # this skill's sim (see automation/backends.py)
+    connectivity:
+      instrument_interface: "# TODO: verify interface"   # BD Melody is normally driven by BD
+                                                         # FACSChorus on a dedicated workstation
+      instrument_connector: "# TODO: verify interface"
+      host_side: "workstation"
+      pi_connector: "# TODO: verify interface"
+      driver_notes: >
+        Not a PyLabRobot device. The BD FACS Melody is driven by BD FACSChorus software;
+        the user is reverse-engineering its control plane (see the user's GitHub -- URL
+        NEEDED). Until then, sorting is SIMULATED: the sim deposits N cells with a modelled
+        sort efficiency and lays out the control wells per protocol Figure 5.
+
+# -----------------------------------------------------------------------------
+# Optional: humanoid robot as the "automation ops person" (experimental).
+# Does NOT drive a real robot; compiles bench tasks into manipulation primitives.
+# See autoscwgs/ops/operator.py. Baked in per the user's vision. <3
+# -----------------------------------------------------------------------------
+humanoid_operator:
+  enabled: false                          # opt-in via `--operator humanoid`
+  make_model: "# TODO: expert value -- general-purpose humanoid (e.g. research platform)"
+  role: "sets up the deck, loads reagents, presses run, moves plates, handles alerts"
+  interface: "# TODO: verify interface -- humanoid task/manipulation API (per vendor SDK)"
+  safety_confirm_for: ["press_run", "collect_output", "handle_alert"]
+
+# -----------------------------------------------------------------------------
+# First-time-buyer controller kit (spec'd only if the user has no controller).
+# Engineering recommendations, not protocol values -- confirm current part numbers.
+# -----------------------------------------------------------------------------
+controller_kit:
+  recommend_when: "no existing PLR controller / Raspberry Pi on the bench"
+  core:
+    - {name: "Raspberry Pi 5 (8 GB) [or Pi 4 4GB+]", role: "runs PyLabRobot", qty: 1,
+       note: "recommendation -- verify current model/availability"}
+    - {name: "Official USB-C PSU (27W Pi 5 / 15W Pi 4)", role: "power", qty: 1}
+    - {name: "microSD 32GB+ preloaded with the PLR image", role: "OS + PyLabRobot", qty: 1,
+       note: "flash Raspberry Pi OS + pylabrobot; image build is a separate step"}
+    - {name: "Case with active cooling (fan/heatsink)", role: "thermal", qty: 1}
+    - {name: "Powered USB hub (external PSU)", role: "power instrument USB links", qty: 1,
+       note: "instruments should not draw from the Pi's USB bus"}
+  networking:
+    - {name: "Ethernet cable (Pi -> lab switch/host)", role: "host<->Pi link", qty: 1}
+    - {name: "Ethernet switch (if host + Pi + ODTC share a segment)", role: "network", qty: 1,
+       optional: true, note: "the ODTC is often ethernet -- a switch is likely needed"}
+
+# -----------------------------------------------------------------------------
+# Cable catalog -- generic connector-pair -> cable type. The connectivity resolver
+# reads instrument+Pi connectors and emits the right cable; any
+# `# TODO: verify interface` end yields a flagged cable line.
+# -----------------------------------------------------------------------------
+cable_catalog:
+  usb_a__usb_b:      "USB-A (Pi) <-> USB-B (instrument) cable"
+  usb_a__usb_c:      "USB-A (Pi) <-> USB-C (instrument) cable"
+  usb_a__usb_serial: "USB-A (Pi) <-> RS-232 serial via FTDI USB-to-serial adapter"
+  usb_a__ethernet:   "Instrument uses ethernet -- connect to switch, not a Pi USB port"
+  ethernet__ethernet: "Ethernet patch cable"

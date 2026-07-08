@@ -15,8 +15,8 @@ Everything runs in the PyLabRobot simulator with no hardware attached.
 
 | Module | Assay | Status |
 |---|---|---|
-| [`autonomous-scRNAseq/`](autonomous-scRNAseq) | FLASH-seq UMI v3 (low-input full-length scRNA-seq + UMIs) | v0.1: 4 stages + Rhodamine B readiness QC + human/humanoid operator + fastq-to-analysis, all wired end to end in the PyLabRobot simulator |
-| single-cell WGS (planned) | whole-genome amplification + NEBNext Ultra II | separate work in progress |
+| [`autonomous-scRNAseq/`](autonomous-scRNAseq) | FLASH-seq UMI v3 (low-input full-length scRNA-seq + UMIs) | v0.1: 4 stages + Rhodamine B readiness QC + human/humanoid operator + fastq-to-analysis (scanpy), all wired end to end in the PyLabRobot simulator |
+| [`autonomous-scWGS/`](autonomous-scWGS) | single-cell WGS: whole-genome amplification + NEBNext Ultra II (FACS Melody sort up front) | v0.1: sort + WGA + library prep + Rhodamine readiness + human/humanoid operator + WGS analysis sequencing analysis, end to end in the PyLabRobot simulator (10/10 tests) |
 
 `autonomous-scRNAseq/` is the FLASH-seq scRNA-seq pipeline. It delivers, all runnable
 with no hardware: procurement (BOM to IDT/browser/PO channels to one human approval),
@@ -24,6 +24,16 @@ a printable bench manual, instrument-readiness QC (Rhodamine B pipetting precisi
 a Synergy H1), the full FLASH-seq automation in the simulator with QC gates and tacit
 guards, a swappable human or humanoid operator, and a fastq-to-analysis pipeline
 (bcl2fastq to umi_tools to STAR to featureCounts to umi_tools count to scanpy).
+
+`autonomous-scWGS/` is the single-cell whole-genome sequencing pipeline: a BD FACS Melody
+sort into whole-genome sequencing Cell Buffer, whole-genome amplification whole-genome amplification, post-WGA
+dsDNA QC on the Synergy H1, NEBNext Ultra II library prep (exact SPRI ratios, do-not-
+over-dry guards), pool, and a fastq-to-variants analysis via the WGS analysis WGS analysis
+Nextflow pipeline (Sentieon BWA MEM to Dedup to BQSR to DNAScope to SnpEff/ClinVar/dbSNP
+to MultiQC). It shares the Rhodamine B readiness QC and human/humanoid operator with the
+scRNAseq module. The underlying kits are proprietary (RESEARCH USE ONLY), not CC-BY;
+values are sourced from the vendor guides and never invented. The FACS Melody control
+plane is being reverse-engineered (owner's TODO); sorting is simulated until wired.
 
 ## The autonomy stack (shared across modules)
 

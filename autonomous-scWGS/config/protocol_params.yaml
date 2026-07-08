@@ -1,0 +1,361 @@
+# =============================================================================
+# protocol_params.yaml  --  single-cell WGS: ResolveDNA PTA WGA + NEBNext Ultra II
+# =============================================================================
+# SOURCES OF TRUTH (two stitched protocols):
+#   [A] ResolveDNA Whole Genome Single-Cell Core Kit, 96-Well Format.
+#       BioSkryb Genomics, User Guide TAS-068.5 (05/2025). WGA (PTA) + sample prep.
+#   [B] NEBNext Ultra II DNA Library Prep Kit for Illumina (NEB #E7645/#E7103),
+#       Instruction Manual v2.0 (5/23). Library prep AFTER the PTA WGA (replaces
+#       the ResolveDNA Universal Library Prep, per the user's workflow).
+#
+# The FACS sort up front is a BD FACS Melody (control-plane reverse-engineered by
+# the user; see instruments.yaml). Deck: Hamilton STAR + Hamilton ODTC (on-deck
+# thermocycler) + BioTek Synergy H1 (dsDNA fluorometric quant).
+#
+# EVERY numeric value below is transcribed from [A] or [B]; provenance noted with
+# `# src: [A] Table N / [B] Section N`. Values the user must tune are marked
+# `# expert-tunable` with the protocol default kept. Anything NOT in either
+# protocol is `# TODO: expert value` -- never invented.
+#
+# SAFETY: assembled partly from pasted/OCR'd text. Verify every volume/temp/time
+# against the source user guides before a real run. RESEARCH USE ONLY --
+# not clinically validated.
+# =============================================================================
+
+meta:
+  workflow: "single-cell WGS (PTA)"
+  wga_method: "ResolveDNA PTA (Primary Template-directed Amplification)"
+  wga_source: "BioSkryb ResolveDNA Whole Genome Single-Cell Core Kit, 96-well (TAS-068.5, 05/2025)"
+  libprep_method: "NEBNext Ultra II DNA Library Prep for Illumina"
+  libprep_source: "NEB #E7645/#E7103, Instruction Manual v2.0 (5/23)"
+  sort: "BD FACS Melody (FACS/FANS), control-plane RE by user"
+  licensing_note: >
+    Both protocols are proprietary vendor user guides (RESEARCH USE ONLY). Values are
+    reproduced here for interoperability/automation; they are NOT open-licensed like
+    the FLASH-seq CC-BY method. Do not redistribute the vendor manuals. See ATTRIBUTION.md.
+
+# -----------------------------------------------------------------------------
+# Run configuration -- the knobs a user touches to scale a run.
+# Both protocols are natively 96-well with explicit per-reaction volumes, so there
+# is NO 384->96 volume multiplier here (unlike flashseq-skill). Totals scale as
+# per_reaction * n_samples * (1 + overage), with each mix's own overage.
+# -----------------------------------------------------------------------------
+run:
+  n_samples: 96                  # single cells/nuclei + controls in this run (1 plate)
+  plate_format: 96               # protocol is 96-well only (TAS-068.5 title)
+  plate_capacity: 96
+
+# -----------------------------------------------------------------------------
+# STAGE S0 -- Single-cell isolation (FACS Melody sort up front).  src: [A] I / II.
+# Cells sorted into 3 uL ResolveDNA Cell Buffer per well (or "dry" then add buffer).
+# -----------------------------------------------------------------------------
+sorting:
+  target: "single viable cell (or nucleus) per well"     # src: [A] Sample Selection
+  cell_buffer_volume_ul: 3.0                             # src: [A] "3 uL of Cell Buffer"
+  dry_sort_supported: true                               # src: [A] "sorted 'dry' into empty wells"
+  storage: "-80 C short-term, or process promptly on ice"  # src: [A] Sample Selection
+  # Control layout (Figure 5): column 1 carries controls; columns 2-12 single cells.
+  controls:                                              # src: [A] Best Practices / Figure 5
+    - {well: "A1", type: "NTC",   formulation: "Cell Buffer alone"}
+    - {well: "B1", type: "NTC",   formulation: "Cell Buffer alone"}
+    - {well: "C1", type: "1ng",   formulation: "1 ng gDNA (high input positive)"}
+    - {well: "D1", type: "1ng",   formulation: "1 ng gDNA (high input positive)"}
+    - {well: "E1", type: "100pg", formulation: "100 pg gDNA (mid input positive)"}
+    - {well: "F1", type: "100pg", formulation: "100 pg gDNA (mid input positive)"}
+    - {well: "G1", type: "10pg",  formulation: "10 pg gDNA (~1-1.5 cells, low positive)"}
+    - {well: "H1", type: "10pg",  formulation: "10 pg gDNA (low input positive)"}
+  # Control gDNA dilution series (src: [A] WGA Procedure steps 6-8).
+  control_gdna:
+    stock_ng_per_ul: 50            # src: [A] Control Genomic DNA (50 ng/uL, cap gold)
+    make_10ng_stock: "2 uL Control gDNA (50 ng/uL) + 8 uL Cell Buffer -> 10 ng/uL"  # src: [A] step 6
+    serial_dilutions_ng_per_ul: [10, 1, 0.1, 0.01]   # src: [A] step 8 (10ng,1ng,100pg,10pg /uL)
+    input_volume_ul: 3.0           # src: [A] "control samples ... in 3 uL of Cell Buffer"
+
+# -----------------------------------------------------------------------------
+# STAGE W1 -- ResolveDNA Whole Genome Amplification (PTA).  src: [A] WGA Procedure.
+# Two master mixes (Lysis, Reaction) + a 2.5 h isothermal amplification.
+# -----------------------------------------------------------------------------
+wga:
+  # -- Lysis Mix (Table 2): 3.0 uL/reaction; 375 uL/96 with 30% overage. -------
+  lysis_mix:
+    volume_per_reaction_ul: 3.0        # src: [A] Table 2 total
+    overage_fraction: 0.30             # src: [A] Table 2 "*30% overage included"
+    components:                        # src: [A] Table 2 (per-reaction uL)
+      - {name: "L1 Reagent", cap_color: "purple", volume_ul: 1.68}
+      - {name: "L2 Reagent", cap_color: "yellow", volume_ul: 0.12}
+      - {name: "L3 Reagent", cap_color: "white",  volume_ul: 1.20}
+    add_to_well_ul: 3.0                # src: [A] step 14 ("add 3 uL of Lysis Mix")
+    mix: "thermal mixer, RT, 20 min at 1400 rpm"    # src: [A] step 16
+  # -- Reaction Mix (Table 3): 6.0 uL/reaction; 750 uL/96 with 30% overage. ----
+  reaction_mix:
+    volume_per_reaction_ul: 6.0        # src: [A] Table 3 total
+    overage_fraction: 0.30             # src: [A] Table 3 "*30% overage included"
+    add_order_note: "combine in order: R1 then R2"   # src: [A] step 17
+    components:                        # src: [A] Table 3 (per-reaction uL)
+      - {name: "R1 Reagent", cap_color: "blue", volume_ul: 5.4}
+      - {name: "R2 Reagent", cap_color: "red",  volume_ul: 0.6}
+    mix: "pipette up/down 10x at 50% volume; avoid bubbles"   # src: [A] step 18
+    add_to_well_ul: 6.0                # src: [A] step 20 ("add 6 uL of the Reaction Mix")
+    mix_after_add: "thermal mixer, RT, 1 min at 1000 rpm"     # src: [A] step 22
+  # -- DNA Amplification program (Table 1, lid 70 C). --------------------------
+  amplification_program:
+    heated_lid_c: 70                   # src: [A] Table 1 ("lid temperature 70 C")
+    steps:
+      - {name: "amplification", temperature_c: 30, time_s: 9000, cycles: 1}   # src: [A] Table 1 Hold 1 (2.5 h)
+      - {name: "inactivation",  temperature_c: 65, time_s: 180,  cycles: 1}   # src: [A] Table 1 Hold 2 (3 min)
+      - {name: "hold",          temperature_c: 4,  time_s: 0,    cycles: 1}   # src: [A] Table 1 Hold 3 (inf)
+    total_time: "~2.6 hours"           # src: [A] Table 1
+  reagent_handling:                    # src: [A] WGA Procedure steps 1-5
+    room_temp_thaw: ["L2 Reagent", "Control gDNA", "Cell Buffer"]   # src: [A] step 2
+    on_ice_thaw: ["L1 Reagent", "L3 Reagent", "R1 Reagent"]         # src: [A] step 3
+    keep_frozen_until_needed: ["R2 Reagent"]                        # src: [A] step 4 / R2 not vortexed
+    do_not_vortex: ["R2 Reagent"]      # src: [A] Before You Begin 6 ("mix all reagents ... except R2")
+    l2_note: "vortex L2 until precipitate fully dissolved once at RT"  # src: [A] step 5 Important
+  safe_stop: "-20 C overnight after WGA"   # src: [A] step 26 Safe Stop
+
+# -----------------------------------------------------------------------------
+# STAGE W2 -- Post-WGA QC checkpoint.  src: [A] Post WGA Quality Control Checkpoint.
+# dsDNA fluorometric quant (Qubit / on Synergy H1) + fragment sizing (Tapestation).
+# -----------------------------------------------------------------------------
+wga_qc:
+  dilute_to_ul: 40.0                   # src: [A] QC step 1 ("Elution Buffer to a total volume of 40 uL")
+  quant:
+    method: "Qubit dsDNA (fluorometric); read on Synergy H1 via standard curve"  # src: [A] QC step 2
+    qubit_sample_ul: 2.0               # src: [A] QC step 2 ("2 uL of diluted reaction")
+    qubit_reagent_ul: 198.0            # src: [A] QC step 2 ("198 uL Qubit reagent")
+    # Reading Qubit/Quant-iT dsDNA chemistry on a plate reader needs a standard curve.
+    synergy_h1_fluorescence:
+      excitation_nm: 485               # TODO: expert value -- Qubit dsDNA HS ~ex 485 (Quant-iT).
+      emission_nm: 530                 # TODO: expert value -- ~em 530. NOT in protocol
+                                       # (protocol uses a Qubit fluorometer). Verify on your H1.
+  sizing:
+    method: "Agilent Tapestation HS D5000 ScreenTape"   # src: [A] QC step 4
+    dilution_ng_per_ul: 2.0            # src: [A] QC step 3 ("2 ng/uL dilution")
+    expected_yield_ng: 800             # src: [A] Appendix A ("Average yield is over 800 ng")
+    expected_fragment_bp: 1275         # src: [A] Appendix A ("Average fragment size ... 1275 bp")
+    fragment_range_bp: [250, 3500]     # src: [A] Fig 2 ("~250 bp to 3.5 kb")
+  gates:
+    min_yield_ng: 100                  # TODO: expert value -- acceptance floor; protocol shows
+                                       # >800 ng typical but states no hard pass/fail. Tune.
+    ntc_max_ng: 10                     # TODO: expert value -- NTC contamination ceiling. Tune.
+
+# -----------------------------------------------------------------------------
+# STAGE L -- NEBNext Ultra II DNA Library Prep.  src: [B]. Input = the PTA WGA
+# product (already a broad fragment pool ~250 bp-3.5 kb; no separate shear step).
+# -----------------------------------------------------------------------------
+libprep:
+  input:
+    dna_input_note: >
+      NEBNext Ultra II is NOT a fragmentation kit -- it end-repairs pre-fragmented
+      DNA. The PTA WGA product is already fragmented (~250 bp-3.5 kb), so it feeds
+      End Prep directly.  # src: [B] Starting Material + [A] Fig 2.
+    dna_input_ng: 100                  # expert-tunable: [B] supports 500 pg-1 ug fragmented
+                                       # DNA into End Prep. WGA yields ~800 ng; 100 ng is a
+                                       # safe mid default. Set per your yield. src: [B] Starting Material.
+    bring_to_volume_ul: 50.0           # src: [B] "add 1X TE to a final volume of 50 ul"
+    diluent: "1X TE (or 10 mM Tris-HCl pH 8.0 / 0.1X TE)"   # src: [B] Starting Material
+
+  # -- 1. End Prep (Section 1). -------------------------------------------------
+  end_prep:
+    components:                        # src: [B] 1.1
+      - {name: "Fragmented DNA (WGA product)", cap_color: "-",     volume_ul: 50.0}
+      - {name: "End Prep Reaction Buffer",     cap_color: "green", volume_ul: 7.0}
+      - {name: "End Prep Enzyme Mix",          cap_color: "green", volume_ul: 3.0}
+    total_volume_ul: 60.0              # src: [B] 1.1
+    mix: "pipette 10x set to 50 uL; quick spin"   # src: [B] 1.2
+    program:                           # src: [B] 1.3
+      heated_lid_c: 75                 # src: [B] 1.3 ("heated lid >= 75 C")
+      steps:
+        - {name: "end_repair", temperature_c: 20, time_s: 1800, cycles: 1}   # src: [B] 30 min @ 20 C
+        - {name: "a_tailing",  temperature_c: 65, time_s: 1800, cycles: 1}   # src: [B] 30 min @ 65 C
+        - {name: "hold",       temperature_c: 4,  time_s: 0,    cycles: 1}   # src: [B] Hold 4 C
+    safe_stop: "-20 C (slight ~20% yield loss); continue to ligation preferred"  # src: [B] 1.3
+
+  # -- 2. Adaptor Ligation (Section 2). -----------------------------------------
+  adaptor_ligation:
+    adaptor_dilution:                  # src: [B] Table 2.1 (choose by End Prep input)
+      # input_range -> (dilution, working_conc_uM)
+      - {input: "1 ug - 101 ng", dilution: "none",  working_conc_uM: 20.0}
+      - {input: "100 ng - 5 ng", dilution: "1:10",  working_conc_uM: 2.0}
+      - {input: "< 5 ng",        dilution: "1:50",  working_conc_uM: 0.4}
+    selected_working_conc_uM: 2.0      # expert-tunable: for the 100 ng default input,
+                                       # Table 2.1 -> 10-fold dilution (2 uM). Re-pick if
+                                       # you change dna_input_ng. src: [B] Table 2.1.
+    components:                        # src: [B] 2.2
+      - {name: "End Prep Reaction Mixture", cap_color: "-",   volume_ul: 60.0}
+      - {name: "NEBNext UMI Adaptor",       cap_color: "-",   volume_ul: 2.5}
+      - {name: "Ligation Master Mix",       cap_color: "red", volume_ul: 30.0}
+      - {name: "Ligation Enhancer",         cap_color: "red", volume_ul: 1.0}
+    total_volume_ul: 93.5              # src: [B] 2.2
+    mix: "pipette 10x set to 80 uL; quick spin (Ligation MM is viscous)"   # src: [B] 2.3
+    incubate: {temperature_c: 20, time_s: 900, heated_lid: "off"}   # src: [B] 2.4 (20 C, 15 min)
+    safe_stop: "-20 C overnight"       # src: [B] 2.4
+
+  # -- 3. Size selection vs cleanup (choose by input). --------------------------
+  cleanup_ligation:
+    decision: "input > 50 ng -> size-select (3A); input <= 50 ng -> cleanup only (3B)"  # src: [B] Section 3
+    selected: "size_selection"         # expert-tunable: 100 ng default input -> 3A size selection.
+                                       # WGA fragments are large; consider re-checking insert
+                                       # target on Tapestation. src: [B] Section 3 + Table 2.3.1.
+    # 3A Size selection (Table 2.3.1) -- default 150 bp insert (final lib ~300 bp).
+    size_selection:
+      insert_size_bp: 150              # expert-tunable: [B] Table 2.3.1 default row.
+      start_volume_ul: 93.5            # src: [B] 3A note
+      bead_add_1_ul: 40.0              # src: [B] Table 2.3.1 (150 bp: 1st addition 40 uL, ~0.4X)
+      bead_add_1_ratio_x: 0.4          # src: [B] 3A.2 ("~0.4X")
+      keep: "supernatant after 1st addition"   # src: [B] 3A.5 (large frags discarded on beads)
+      bead_add_2_ul: 20.0              # src: [B] Table 2.3.1 (150 bp: 2nd addition 20 uL, 0.2X)
+      bead_add_2_ratio_x: 0.2          # src: [B] 3A.6 ("0.2X")
+      keep2: "beads after 2nd addition (desired DNA)"   # src: [B] 3A.8
+      ethanol_percent: 80              # src: [B] 3A.9
+      ethanol_volume_ul: 200           # src: [B] 3A.9
+      ethanol_washes: 2                # src: [B] 3A.9-3A.10 ("total of two washes")
+      ethanol_incubate_s: 30           # src: [B] 3A.9
+      air_dry_max_min: 5               # src: [B] 3A.11 ("up to 5 minutes")
+      guard_do_not_overdry: true       # src: [B] 3A.11 caution ("Do not overdry the beads")
+      elute_te_ul: 22.0                # src: [B] 3A.12 ("22 uL of 0.1X TE")
+      elute_te: "0.1X TE"              # src: [B] 3A.12
+      elute_incubate_min: 2            # src: [B] 3A.13
+      transfer_ul: 20.0                # src: [B] 3A.14 ("transfer 20 uL")
+    # 3B Cleanup without size selection (for input <= 50 ng).
+    cleanup_only:
+      bead_ratio_x: 0.7                # src: [B] 3B.2 ("65 uL (0.7X)")
+      bead_volume_ul: 65.0             # src: [B] 3B.2
+      bead_volume_ul_cfdna: 75.0       # src: [B] 3B.2 note (75 uL for cell-free DNA)
+      ethanol_percent: 80
+      ethanol_volume_ul: 200
+      ethanol_washes: 2
+      ethanol_incubate_s: 30
+      air_dry_max_min: 5
+      guard_do_not_overdry: true       # src: [B] 3B.8 caution
+      elute_te_ul: 22.0                # src: [B] 3B.9
+      transfer_ul: 20.0                # src: [B] 3B.11
+
+  # -- 4. PCR enrichment (Section 4). -------------------------------------------
+  pcr_enrichment:
+    components:                        # src: [B] 4.1.1
+      - {name: "Adaptor-ligated DNA", cap_color: "-",    volume_ul: 20.0}
+      - {name: "NEBNext Primer Mix",  cap_color: "blue", volume_ul: 5.0}
+      - {name: "Q5 Master Mix",       cap_color: "blue", volume_ul: 25.0}
+    total_volume_ul: 50.0              # src: [B] 4.1.1
+    mix: "pipette 10x set to 40 uL; quick spin"   # src: [B] 4.1.2
+    cycles: 3                          # expert-tunable: [B] Table 4.1. For 100 ng-1 ug input,
+                                       # standard library prep = 3 cycles. Raise for lower input
+                                       # (10 ng -> 6-7; 5 ng -> 7-8; 1 ng -> 9-10). src: [B] Table 4.1.
+    cycles_range: [3, 15]              # src: [B] 4.1.3 ("3-15*")
+    program:                           # src: [B] 4.1.3
+      heated_lid_c: 103                # src: [B] checklist ("Heated lid >= 103 C")
+      steps:
+        - {name: "initial_denaturation", temperature_c: 98, time_s: 30, cycles: 1}   # src: [B] 98 C 30 s
+        - name: "amplification"
+          cycles: 3                    # mirrors pcr_enrichment.cycles (expert-tunable)
+          substeps:
+            - {name: "denaturation",        temperature_c: 98, time_s: 10}   # src: [B] 98 C 10 s
+            - {name: "annealing_extension", temperature_c: 65, time_s: 75}   # src: [B] 65 C 75 s
+        - {name: "final_extension", temperature_c: 65, time_s: 300, cycles: 1}   # src: [B] 65 C 5 min
+        - {name: "hold",            temperature_c: 4,  time_s: 0,   cycles: 1}   # src: [B] Hold 4 C
+
+  # -- 5. PCR cleanup (Section 5). ----------------------------------------------
+  cleanup_pcr:
+    bead_ratio_x: 0.8                  # src: [B] 5.2 ("40 uL (0.8X)")
+    bead_volume_ul: 40.0               # src: [B] 5.2
+    bead_volume_ul_cfdna: 50.0         # src: [B] 5.2 note
+    ethanol_percent: 80
+    ethanol_volume_ul: 200             # src: [B] 5.6
+    ethanol_washes: 2                  # src: [B] 5.6-5.7
+    ethanol_incubate_s: 30             # src: [B] 5.6
+    air_dry_max_min: 5                 # src: [B] 5.8
+    guard_do_not_overdry: true         # src: [B] 5.8 caution
+    elute_te_ul: 33.0                  # src: [B] 5.9 ("33 uL of 0.1X TE")
+    elute_te: "0.1X TE (or 10 mM Tris-HCl)"  # src: [B] 5.9
+    elute_incubate_min: 2              # src: [B] 5.10
+    transfer_ul: 30.0                  # src: [B] 5.11 ("transfer 30 uL")
+    qc: "Agilent Bioanalyzer HS DNA chip (size distribution)"   # src: [B] 5.12
+
+# -----------------------------------------------------------------------------
+# Post-library QC + pooling.  src: [A] Post Library Amplification QC + [B] 5.12.
+# -----------------------------------------------------------------------------
+library_qc:
+  quant:
+    method: "Qubit High Sensitivity dsDNA (fluorometric); read on Synergy H1"  # src: [A] post-lib QC 1
+    qubit_sample_ul: 2.0               # src: [A] post-lib QC 1
+    qubit_reagent_ul: 198.0            # src: [A] post-lib QC 1
+  sizing:
+    method: "Agilent Tapestation HS D1000 ScreenTape"   # src: [A] post-lib QC 3
+    dilution_ng_per_ul: 2.0            # src: [A] post-lib QC 2/3
+  final_pool_cleanup:
+    bead_ratio_x: 0.75                 # src: [A] post-lib QC 6 ("0.75X beads prior to sequencing")
+    example: "for 100 uL pooled sample, add 75 uL beads"   # src: [A] post-lib QC 6
+
+# -----------------------------------------------------------------------------
+# Sequencing.  src: [A] Appendix C.
+# -----------------------------------------------------------------------------
+sequencing:
+  platform: "Illumina (any platform; UDI adapters)"       # src: [A] Appendix C
+  low_pass:                                               # src: [A] Appendix C Initial Low-pass
+    read_length_bp: 50                 # src: [A] "50 base paired-end"
+    paired_end: true
+    reads_per_cell_millions: [2, 5]    # src: [A] "2 - 5 million reads per cell"
+    purpose: "library complexity + CNV analysis"          # src: [A] Appendix C
+  deep:                                                   # src: [A] Appendix C
+    coverage_x: [25, 30]               # src: [A] "25 - 30X genomic coverage"
+    purpose: "SNV / structural variation"                 # src: [A] Appendix C
+
+# -----------------------------------------------------------------------------
+# Sequencing analysis -- BaseJumper BJ-WGS (the vendor Nextflow pipeline for
+# ResolveDNA / PTA data).  src: [C] BioSkryb/bj-wgs GitHub README (release 2.1.0).
+# This is the fastq-to-variants pipeline; the result/ stage generates its input.csv
+# and the exact `nextflow run` command. It is a Nextflow + Docker + Sentieon
+# pipeline (external), not bundled here.
+# -----------------------------------------------------------------------------
+analysis:
+  pipeline: "BaseJumper BJ-WGS"                 # src: [C]
+  repo: "https://github.com/BioSkryb/bj-wgs"    # src: [C]
+  entrypoint: "nextflow run main.nf"            # src: [C]
+  # Pipeline steps + tools (src: [C] Pipeline Overview).
+  steps:
+    - "SENTIEON BWA MEM: map reads to reference"                        # src: [C]
+    - "SENTIEON LocusCollector + Dedup: remove duplicate reads"        # src: [C]
+    - "SENTIEON BQSR: base quality score recalibration"                # src: [C]
+    - "variant calling: DNAScope (default) or Haplotyper"              # src: [C]
+    - "variant annotation: SnpEff + ClinVar + dbSNP"                   # src: [C]
+    - "SENTIEON metrics: alignment, GC bias, insert size, coverage"    # src: [C]
+    - "VCFeval: analytical performance (GIAB HG001-HG007 only)"        # src: [C]
+    - "MULTIQC: aggregate metrics across biosamples/tools"             # src: [C]
+  genomes: ["GRCh38", "GRCm39"]                 # src: [C] --genome (DEFAULT GRCh38)
+  genome_default: "GRCh38"                       # src: [C]
+  platforms: ["Illumina", "Ultima", "Element"]  # src: [C] --platform (DEFAULT Illumina)
+  platform_default: "Illumina"                   # src: [C]
+  dnascope_model_selection: "sentieon"           # src: [C] DEFAULT sentieon;
+                                                 # use "bioskryb129" = PTA-corrected DNAScope
+                                                 # model for Illumina (recommended for PTA).
+  dnascope_model_pta: "bioskryb129"              # src: [C] PTA-corrected model (expert-tunable)
+  min_reads: 1000                                # src: [C] --min_reads DEFAULT 1000
+  input_csv_columns_illumina: ["biosampleName", "read1", "read2"]         # src: [C]
+  input_csv_columns_ultima:   ["biosampleName", "reads", "cram", "crai"]  # src: [C]
+  resources:                                     # src: [C] Resources Required
+    typical: {max_cpus: 8,  max_memory_gb: 50}   # src: [C] "8 CPU cores and 50 GB"
+    large:   {max_cpus: 64, max_memory_gb: 120}  # src: [C] "64 CPU cores and 120 GB"
+  optional_modules:                              # src: [C] Optional Modules (defaults)
+    skip_vcfeval: true
+    skip_variant_annotation: false
+    skip_gene_coverage: false
+    skip_ado: true
+    skip_subsampling: true
+    skip_sigprofile: false
+  tool_versions:                                 # src: [C] Tool versions
+    seqtk: "1.3-r106"
+    sentieon: "202308.01"
+    snpeff: "5.1d 2022-04-19"
+    vcfeval: "3.12.1"
+    bcftools: "1.14"
+  external_deps: ["Java (JDK)", "Nextflow", "Docker", "AWS CLI", "Sentieon license (eval via BioSkryb helpdesk)"]  # src: [C] Running Locally
+  outputs:                                       # src: [C] Outputs
+    alignment: "secondary_analyses/alignment/"
+    metrics: "secondary_analyses/metrics/<sample>/"
+    variants: "secondary_analyses/variant_calls_dnascope/"
+    annotation: "tertiary_analyses/variant_annotation/snpeff/"
+    report: "multiqc/multiqc_report.html"
+  depth_targets:                                 # src: [A] Appendix C (sequencing depth)
+    low_pass: "50 bp PE, 2-5 M reads/cell (CNV)"
+    deep: "25-30X coverage (SNV / structural variants)"

@@ -15,9 +15,15 @@ modules:
     license_method: "CC-BY"
     path: "autonomous-scRNAseq"
     status: "v0.1 - 4 stages + Rhodamine readiness + operator + fastq-to-analysis, end to end in PLR simulator"
-  - name: single-cell-wgs
-    assay: "ResolveDNA PTA WGA + NEBNext Ultra II"
-    status: "planned / separate work in progress"
+  - name: autonomous-scWGS
+    assay: "single-cell WGS: ResolveDNA PTA WGA + NEBNext Ultra II (FACS Melody sort up front)"
+    sources:
+      - "ResolveDNA (BioSkryb TAS-068.5) - proprietary / RUO"
+      - "NEBNext Ultra II (NEB E7645) - proprietary / RUO"
+      - "BJ-WGS analysis (BioSkryb/bj-wgs Nextflow) - see repo LICENSE"
+    license_method: "proprietary (RUO) - not open-licensed like FLASH-seq CC-BY"
+    path: "autonomous-scWGS"
+    status: "v0.1 - sort + WGA + libprep + readiness + operator + BJ-WGS analysis, end to end in PLR simulator (10/10 tests)"
 
 instruments:
   - id: hamilton_star
@@ -25,9 +31,9 @@ instruments:
     integration: "PyLabRobot (STARBackend); simulator working"
     status: "integrated"
   - id: on_deck_thermocycler
-    role: "thermocycler"
-    integration: "PyLabRobot Thermocycler; backend TBD by model"
-    status: "integrated (sim); backend TODO by model"
+    role: "thermocycler (scRNAseq); Hamilton ODTC (scWGS)"
+    integration: "PyLabRobot Thermocycler; scWGS uses Hamilton ODTC (Inheco, no PLR backend yet)"
+    status: "integrated (sim); hardware backend TODO by model"
   - id: synergy_h1
     role: "plate reader (PicoGreen quant, Rhodamine B readiness QC)"
     integration: "PyLabRobot SynergyH1Backend; simulator working"
@@ -47,7 +53,7 @@ autonomy_layers:
   readiness:    "done: Rhodamine B liquid-handling CV check"
   execution:    "done (sim): full FLASH-seq flow + QC gates/guards"
   ops:          "human done; humanoid experimental"
-  analysis:     "done: fastq-to-analysis (bcl2fastq to umi_tools to STAR to featureCounts to umi_tools count to scanpy)"
+  analysis:     "done: scRNAseq fastq-to-analysis (bcl2fastq to umi_tools to STAR to featureCounts to umi_tools count to scanpy); scWGS via BaseJumper BJ-WGS Nextflow (Sentieon BWA MEM to Dedup to BQSR to DNAScope to SnpEff to MultiQC)"
 
 benchmarks:
   goal: "expert parity at lower cost + hands-on time"

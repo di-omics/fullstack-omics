@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "autonomous-scWGS"
+version = "0.1.0"
+description = "Skill: autonomous single-cell WGS (ResolveDNA PTA + NEBNext Ultra II) with a FACS Melody sort, end-to-end on a Hamilton/PyLabRobot deck."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "di" }]
+keywords = ["single-cell", "WGS", "PTA", "ResolveDNA", "NEBNext", "FACS", "PyLabRobot", "Hamilton", "lab-automation"]
+dependencies = [
+    "pylabrobot>=0.2.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[tool.setuptools]
+packages = [
+    "autoscwgs",
+    "autoscwgs.sorting",
+    "autoscwgs.readiness",
+    "autoscwgs.ops",
+    "autoscwgs.procurement",
+    "autoscwgs.automation",
+    "autoscwgs.result",
+    "autoscwgs.manual",
+]
+
+[tool.setuptools.package-data]
+"*" = ["../config/*.yaml"]
