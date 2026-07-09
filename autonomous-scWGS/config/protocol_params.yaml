@@ -312,6 +312,9 @@ analysis:
   pipeline: "BaseJumper BJ-WGS"                 # src: [C]
   repo: "https://github.com/BioSkryb/bj-wgs"    # src: [C]
   entrypoint: "nextflow run main.nf"            # src: [C]
+  included_as: "git submodule (pinned to release 2.1.0)"   # vendored by reference; see .gitmodules
+  submodule_path: "autonomous-scWGS/bj-wgs"     # relative to the fullstack-omics repo root
+  pin: "2.1.0"                                   # BioSkryb release tag the submodule points at
   # Pipeline steps + tools (src: [C] Pipeline Overview).
   steps:
     - "SENTIEON BWA MEM: map reads to reference"                        # src: [C]

@@ -127,9 +127,11 @@ def test_procurement_refuses_without_approval():
 def test_bj_wgs_pipeline_and_input_csv():
     p = load_params()
     script = generate_pipeline(p)
-    # WGS analysis Nextflow runner (not the old bcl2fastq stub).
-    assert "nextflow run main.nf" in script
+    # WGS analysis Nextflow runner that uses the INCLUDED submodule (not a runtime clone).
+    assert "nextflow run" in script and "main.nf" in script
     assert "github.com/BioSkryb/bj-wgs" in script
+    assert "git submodule update --init" in script and "$BJ_WGS_DIR" in script
+    assert "git clone" not in script  # pipeline is vendored as a submodule, not cloned
     assert "--dnascope_model_selection" in script and "bioskryb129" in script
     assert "SENTIEON_LICENSE" in script
     # input.csv: header + one row per sample well (biosampleName,read1,read2).

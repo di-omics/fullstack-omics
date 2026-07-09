@@ -1,0 +1,3 @@
+[submodule "autonomous-scWGS/bj-wgs"]
+	path = autonomous-scWGS/bj-wgs
+	url = https://github.com/BioSkryb/bj-wgs.git

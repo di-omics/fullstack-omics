@@ -22,10 +22,16 @@ NEBNext(R) is a registered trademark of New England Biolabs, Inc.
 
 ### [C] Sequencing analysis -- BaseJumper BJ-WGS
 > BioSkryb Genomics. *BJ-WGS* Nextflow pipeline. `https://github.com/BioSkryb/bj-wgs`
-> (release 2.1.0). See that repository's own LICENSE.
+> (release 2.1.0). **BioSkryb proprietary LICENSE** (Terms & Conditions), NOT open source.
 
-The `result/` stage generates the BJ-WGS `input.csv` and `nextflow run` command; it does
-not redistribute the pipeline. BJ-WGS requires Sentieon (commercial).
+BJ-WGS is **included as a git submodule** at `autonomous-scWGS/bj-wgs`, pinned to release
+2.1.0 (see `.gitmodules`). A submodule stores only a **pointer** to BioSkryb's public repo
+at that commit -- this repository does **not** copy or redistribute BioSkryb's code, and no
+BJ-WGS files are committed here. Fetching it (`git submodule update --init --recursive`)
+downloads it from BioSkryb directly, subject to **BioSkryb's own license/terms**. Running it
+additionally requires a **Sentieon** license (commercial; eval/pass-through via a BioSkryb
+helpdesk ticket). The `result/` stage generates the `input.csv` + `run_bj_wgs.sh` that drive
+this included pipeline.
 
 ### Sort -- BD FACS Melody
 > BD Biosciences. BD FACS Melody cell sorter (driven by BD FACSChorus).

@@ -79,13 +79,15 @@ checkpoints (see below). `--operator humanoid` routes bench tasks through the ex
 humanoid ops layer.
 
 ### 4. Result (`autoscwgs/result/`)
-Sequencing analysis via **WGS analysis WGS analysis** (the vendor Nextflow pipeline for whole-genome sequencing /
-whole-genome amplification data, `github.com/the vendor/bj-wgs`): Sentieon BWA MEM -> LocusCollector+Dedup -> BQSR ->
-DNAScope (whole-genome amplification-corrected `bioskryb129` model) or Haplotyper -> SnpEff/ClinVar/dbSNP -> Sentieon
-metrics -> VCFeval (GIAB only) -> MultiQC. The stage generates the WGS analysis `input.csv` (one row
-per sorted single-cell library) and `run_bj_wgs.sh` (the exact `nextflow run main.nf` command
-with genome/platform/model/resources). External deps (Java, Nextflow, Docker, AWS CLI,
-Sentieon license) are preflighted and marked (not bundled). Values from `src: [C]` WGS analysis README.
+Sequencing analysis via **WGS analysis WGS analysis**, **included as a git submodule** at
+`bj-wgs/` pinned to release **2.1.0** (`github.com/the vendor/bj-wgs`; the vendor-proprietary
+license, referenced not redistributed -- `git submodule update --init --recursive` to fetch).
+Pipeline: Sentieon BWA MEM -> LocusCollector+Dedup -> BQSR -> DNAScope (whole-genome amplification-corrected
+`bioskryb129` model) or Haplotyper -> SnpEff/ClinVar/dbSNP -> Sentieon metrics -> VCFeval
+(GIAB only) -> MultiQC. The stage generates the WGS analysis `input.csv` (one row per sorted
+single-cell library) and `run_bj_wgs.sh` (inits the submodule, then runs `nextflow run
+bj-wgs/main.nf` with genome/platform/model/resources). External deps (Java, Nextflow, Docker,
+AWS CLI, Sentieon license) are preflighted and marked (not bundled). Values from `src: [C]`.
 
 ## QC gates + tacit guards (baked in)
 

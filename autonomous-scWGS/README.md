@@ -35,9 +35,15 @@ thermocycler) + **BioTek Synergy H1** (dsDNA fluorometric quant) + **BD FACS Mel
 
 ```bash
 pip install -r requirements.txt
+git submodule update --init --recursive     # fetch the included BJ-WGS pipeline (pinned 2.1.0)
 python scripts/run_all.py --n 16 --first-time-buyer        # all stages -> output/
 python tests/test_end_to_end.py                            # 10/10, no hardware
 ```
+
+> The WGS analysis analysis pipeline is **included as a git submodule** (`bj-wgs/`, pinned to
+> release 2.1.0). It's the vendor's proprietary pipeline, referenced (not redistributed);
+> the submodule fetches it from the vendor's repo. Running it needs Nextflow + Docker + a
+> Sentieon license. The sim (stages 0-3) needs none of that.
 
 Per-stage:
 

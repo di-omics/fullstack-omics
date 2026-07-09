@@ -69,7 +69,10 @@ def generate_pipeline(p: Params) -> str:
 # calls variants (DNAScope default / Haplotyper), annotates (SnpEff + ClinVar +
 # dbSNP), computes Sentieon metrics, VCFeval (GIAB only), and aggregates in MultiQC.
 #
-# EXTERNAL (not bundled): Java, Nextflow, Docker, AWS CLI, and a Sentieon license
+# The WGS analysis pipeline is INCLUDED in this repo as a git submodule pinned to release
+# {a['pin']} (path: {a['submodule_path']}; see .gitmodules). It is the vendor code under
+# the vendor's own (proprietary) LICENSE -- referenced, not redistributed. EXTERNAL tools
+# it needs (not bundled): Java, Nextflow, Docker, AWS CLI, and a Sentieon license
 # (eval/pass-through via a the vendor helpdesk ticket). Tool versions (src: [C]):
 #   Seqtk {tv['seqtk']} | Sentieon {tv['sentieon']} | SnpEff {tv['snpeff']} |
 #   VCFeval {tv['vcfeval']} | BCFtools {tv['bcftools']}.
@@ -77,6 +80,9 @@ def generate_pipeline(p: Params) -> str:
 set -euo pipefail
 
 # ---- 0. Config (EDIT THESE) ------------------------------------------------
+# BJ_WGS_DIR points at the included submodule. Default assumes you run this from the
+# autonomous-scWGS module root; override if you run it elsewhere.
+BJ_WGS_DIR="${{BJ_WGS_DIR:-bj-wgs}}"                # the pinned submodule ({a['pin']})
 INPUT_CSV="${{INPUT_CSV:-$PWD/input.csv}}"          # biosampleName,read1,read2
 PUBLISH_DIR="${{PUBLISH_DIR:-results/bj-wgs}}"
 GENOME="${{GENOME:-{a['genome_default']}}}"                       # {" | ".join(a['genomes'])}
@@ -86,9 +92,16 @@ DNASCOPE_MODEL="${{DNASCOPE_MODEL:-{a['dnascope_model_pta']}}}"   # or '{a['dnas
 MIN_READS="${{MIN_READS:-{a['min_reads']}}}"
 MAX_CPUS="${{MAX_CPUS:-{res['max_cpus']}}}"                        # large runs: {a['resources']['large']['max_cpus']}
 MAX_MEMORY="${{MAX_MEMORY:-{res['max_memory_gb']}.GB}}"           # large runs: {a['resources']['large']['max_memory_gb']}.GB
-SENTIEON_LICENSE="${{SENTIEON_LICENSE:-$PWD/bj-wgs/sentieon_eval.lic}}"
+SENTIEON_LICENSE="${{SENTIEON_LICENSE:-$BJ_WGS_DIR/sentieon_eval.lic}}"
 
-# ---- 1. Preflight (src: [C] Running Locally) --------------------------------
+# ---- 1. Ensure the included pipeline submodule is present -------------------
+if [ ! -f "$BJ_WGS_DIR/main.nf" ]; then
+  echo "[bj-wgs] submodule not initialised; fetching {a['submodule_path']} (pin {a['pin']})..." >&2
+  git submodule update --init --recursive "{a['submodule_path']}" || \\
+    git submodule update --init --recursive || true
+fi
+
+# ---- 2. Preflight (src: [C] Running Locally) --------------------------------
 for tool in java nextflow docker aws; do
   command -v "$tool" >/dev/null 2>&1 || \\
     echo "[bj-wgs] MISSING external tool: $tool (see the WGS analysis README 'Running Locally')" >&2
@@ -96,20 +109,16 @@ done
 if [ ! -f "$SENTIEON_LICENSE" ]; then
   echo "[bj-wgs] Sentieon license not found at $SENTIEON_LICENSE" >&2
   echo "[bj-wgs] Submit a the vendor helpdesk ticket for an eval/pass-through Sentieon license," >&2
-  echo "[bj-wgs] save it at bj-wgs/sentieon_eval.lic, then re-run." >&2
+  echo "[bj-wgs] save it at $BJ_WGS_DIR/sentieon_eval.lic, then re-run." >&2
 fi
 export SENTIEON_LICENSE
 
-# ---- 2. Get the pipeline ----------------------------------------------------
-[ -d bj-wgs ] || git clone {a['repo']}.git
-cd bj-wgs
-
-# ---- 3. Run WGS analysis ----------------------------------------------------------
+# ---- 3. Run WGS analysis (from the included submodule) ---------------------------
 # Optional modules (defaults from src: [C]): skip_vcfeval={str(mods['skip_vcfeval']).lower()},
 #   skip_variant_annotation={str(mods['skip_variant_annotation']).lower()},
 #   skip_gene_coverage={str(mods['skip_gene_coverage']).lower()}, skip_ado={str(mods['skip_ado']).lower()},
 #   skip_subsampling={str(mods['skip_subsampling']).lower()}, skip_sigprofile={str(mods['skip_sigprofile']).lower()}.
-nextflow run main.nf \\
+nextflow run "$BJ_WGS_DIR/main.nf" \\
   --input_csv "$INPUT_CSV" \\
   --publish_dir "$PUBLISH_DIR" \\
   --genome "$GENOME" \\

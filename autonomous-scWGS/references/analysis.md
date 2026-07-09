@@ -1,21 +1,27 @@
 # Sequencing analysis (WGS analysis WGS analysis)
 
 The fastq-to-variants analysis is **WGS analysis WGS analysis**, the vendor Nextflow pipeline for
-whole-genome sequencing / whole-genome amplification data (`github.com/the vendor/bj-wgs`, release 2.1.0). All values below are
-from the WGS analysis README (src: [C]). RESEARCH USE ONLY. Author: di.
+whole-genome sequencing / whole-genome amplification data. It is **included in this repo as a git submodule** at
+`autonomous-scWGS/bj-wgs`, pinned to release **2.1.0** (`github.com/the vendor/bj-wgs`; see
+`.gitmodules`). WGS analysis is the vendor code under the vendor's own (proprietary) LICENSE -- it is
+referenced, not redistributed; fetch it with `git submodule update --init --recursive`. All
+values below are from the WGS analysis README (src: [C]). RESEARCH USE ONLY. Author: di.
 
 ## What `autoscwgs/result/` generates
 
 - `input.csv` - one row per sorted single-cell library: `biosampleName,read1,read2`
   (Illumina). The sample wells come straight from the FACS sort plan, so the analysis input
   lines up with what was actually sorted/prepped.
-- `run_bj_wgs.sh` - preflights Java / Nextflow / Docker / AWS CLI + the Sentieon license,
-  clones `bj-wgs`, and runs the exact command:
+- `run_bj_wgs.sh` - inits the pinned submodule if needed, preflights Java / Nextflow /
+  Docker / AWS CLI + the Sentieon license, and runs the exact command against the included
+  pipeline:
   ```
-  nextflow run main.nf --input_csv input.csv --publish_dir results/bj-wgs \
+  nextflow run bj-wgs/main.nf --input_csv input.csv --publish_dir results/bj-wgs \
     --genome GRCh38 --platform Illumina --dnascope_model_selection bioskryb129 \
     --min_reads 1000 --max_cpus 8 --max_memory 50.GB
   ```
+  WGS analysis also ships an `nf-test` suite in its own `tests/` (run `nf-test test` inside the
+  submodule) for validating the pipeline itself.
 
 ## Pipeline steps (tools)
 
