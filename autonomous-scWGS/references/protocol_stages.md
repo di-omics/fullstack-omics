@@ -1,15 +1,16 @@
 # Protocol stages (exact values)
 
-Sources: **[A]** whole-genome amplification (the kit user guide) . **[B]** NEBNext Ultra II (NEB
-E7645). All values live in `config/protocol_params.yaml` with `# src:` provenance. Verify
-against the vendor guides before running. RESEARCH USE ONLY.
+Sources: **[A]** supplier-provided single-cell WGA protocol (proprietary, RUO).
+**[B]** NEBNext Ultra II (NEB E7645). All values live in
+`config/protocol_params.yaml` with `# src:` provenance. Verify against authorized source
+documentation before running. RESEARCH USE ONLY.
 
 ## Stage 0b - FACS Melody sort  (src: [A])
 - Single cell / nucleus per well into **3 uL Cell Buffer** (or dry, then add buffer).
 - Column 1 = controls: A1/B1 NTC, C1/D1 1 ng, E1/F1 100 pg, G1/H1 10 pg gDNA (Figure 5).
 - Control gDNA: 2 uL 50 ng/uL + 8 uL Cell Buffer -> 10 ng/uL; serial -> 1 ng/100 pg/10 pg /uL.
 
-## Stage W1 - whole-genome amplification (whole-genome amplification)  (src: [A] Tables 1-3)
+## Stage W1 - Single-cell whole-genome amplification (WGA)  (src: [A] Tables 1-3)
 - **Lysis Mix** 3.0 uL/rxn (L1 1.68, L2 0.12, L3 1.20); 30% overage -> 375 uL/96. Add 3 uL/well;
   thermal-mix RT 20 min @ 1400 rpm.
 - **Reaction Mix** 6.0 uL/rxn (R1 5.4, R2 0.6); 30% overage -> 750 uL/96. Add 6 uL/well (R1 then R2);
@@ -38,17 +39,18 @@ against the vendor guides before running. RESEARCH USE ONLY.
 ## Sequencing  (src: [A] Appendix C)
 - Illumina, UDI adapters. Low-pass: **50 bp PE, 2-5 M reads/cell** (CNV). Deep: **25-30x** (SNV).
 
-## Analysis  (src: [C] WGS analysis README)
-- **WGS analysis WGS analysis** Nextflow pipeline (`github.com/the vendor/bj-wgs`): Sentieon BWA MEM ->
-  LocusCollector+Dedup -> BQSR -> DNAScope (whole-genome amplification model `bioskryb129`) / Haplotyper ->
+## Analysis  (src: [C] compatible pipeline interface)
+- External WGS Nextflow pipeline: Sentieon BWA MEM ->
+  LocusCollector+Dedup -> BQSR -> explicitly configured variant model ->
   SnpEff/ClinVar/dbSNP -> Sentieon metrics -> VCFeval (GIAB only) -> MultiQC.
 - Genomes GRCh38 (default) / GRCm39; platforms Illumina (default) / Ultima / Element;
   `--min_reads 1000`; typical 8 CPU / 50 GB, large 64 CPU / 120 GB.
-- `result/` generates `input.csv` (biosampleName,read1,read2 per sorted well) + `run_bj_wgs.sh`.
-- External deps: Java, Nextflow, Docker, AWS CLI, **Sentieon** (commercial; eval via the vendor).
+- `result/` generates `input.csv` (biosampleName,read1,read2 per sorted well) +
+  `run_wgs_analysis.sh`; `DNASCOPE_MODEL` is required at runtime with no repository default.
+- External deps: Java, Nextflow, Docker, AWS CLI, and a valid **Sentieon** license.
 
 ## Expert-tunable / TODO (never invented)
 - NEBNext **input ng**, **PCR cycles**, **adaptor dilution**, **insert size** - guide defaults kept.
 - **Qubit-on-H1 ex/em** (485/530) - guides use a Qubit fluorometer; verify on your H1.
-- whole-genome sequencing **whole-kit catalog #**, HS D1000 catalog #, GLS/sorter consumables - `# TODO`.
+- WGA **whole-kit catalog #**, HS D1000 catalog #, GLS/sorter consumables - `# TODO`.
 - Reference build (GRCh38) - confirm.

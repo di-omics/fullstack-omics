@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage 4 -- generate the WGS analysis WGS analysis analysis (input.csv + nextflow runner).
+"""Stage 4 -- generate WGS analysis inputs and a Nextflow runner.
 
   python scripts/generate_analysis.py
 """
@@ -13,11 +13,13 @@ from autoscwgs.result import write_pipeline
 def main() -> None:
     p = load_params()
     res = write_pipeline(p, OUTPUT_DIR)
-    print(f"[result] BJ-WGS runner -> {res['pipeline']}")
-    print(f"[result] BJ-WGS input   -> {res['input_csv']}")
-    print("[result] Pipeline: BioSkryb BJ-WGS (Nextflow): Sentieon BWA MEM -> Dedup -> BQSR")
-    print("[result]   -> DNAScope (PTA model bioskryb129) -> SnpEff/ClinVar/dbSNP -> MultiQC.")
-    print("[result] External deps: Java, Nextflow, Docker, AWS CLI, Sentieon license.")
+    print(f"[result] WGS runner -> {res['pipeline']}")
+    print(f"[result] WGS input  -> {res['input_csv']}")
+    print("[result] Pipeline: external WGS Nextflow workflow: Sentieon BWA MEM -> Dedup -> BQSR")
+    print("[result]   -> DNAScope -> SnpEff/ClinVar/dbSNP -> MultiQC.")
+    print("[result] Generated handoff only; external analysis has not run.")
+    print("[result] Required runtime config: WGS_PIPELINE_DIR, DNASCOPE_MODEL, SENTIEON_LICENSE.")
+    print("[result] Required host tools: Java, Nextflow, Docker, AWS CLI.")
 
 
 if __name__ == "__main__":

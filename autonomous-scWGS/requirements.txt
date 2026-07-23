@@ -8,4 +8,4 @@ pyyaml>=6.0           # config/*.yaml (source of truth)
 #
 # Stage 4 analysis calls these EXTERNAL tools (install separately, not pip):
 #   bcl2fastq (Illumina), bwa-mem2 (or bwa), samtools, mosdepth, deepvariant/gatk (deep).
-#   Vendor path: the vendor WGS analysis (hosted platform -- no local install).
+#   External WGS analysis pipeline and hosted platform -- no local package install.

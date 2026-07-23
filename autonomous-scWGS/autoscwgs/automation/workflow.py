@@ -1,11 +1,11 @@
-"""Single-cell WGS flow, wired end-to-end and runnable in the PLR simulator.
+"""Single-cell WGS wet-lab flow, wired for the PLR simulator.
 
-Flow (src: whole-genome sequencing [A] + NEBNext Ultra II [B]; all volumes/temps/times from
+Flow (src: WGA protocol [A] + NEBNext Ultra II [B]; all volumes/temps/times from
 protocol_params.yaml):
 
   FACS Melody sort (3 uL Cell Buffer/well, controls in col 1)
     -> Lysis Mix 3 uL + thermal-mix -> Reaction Mix 6 uL + thermal-mix
-    -> ODTC WGA: 30 C 2.5 h -> 65 C 3 min -> 4 C            (whole-genome amplification)
+    -> ODTC WGA: 30 C 2.5 h -> 65 C 3 min -> 4 C
     -> dilute to 40 uL -> dsDNA quant on Synergy H1 -> WGA QC gates
     -> NEBNext End Prep (20 C 30 min / 65 C 30 min)
     -> Adaptor Ligation (20 C 15 min) -> SPRI size-select 0.4X/0.2X
@@ -64,7 +64,7 @@ class WorkflowResult:
 
     def summary(self) -> str:
         lines = [
-            f"Single-cell WGS automation ({self.mode}) -- N={self.n_samples} (ResolveDNA PTA + NEBNext Ultra II)",
+            f"Single-cell WGS automation ({self.mode}) -- N={self.n_samples} (WGA + NEBNext Ultra II)",
             "=" * 72,
         ]
         if self.readiness is not None:
@@ -234,7 +234,7 @@ async def run_workflow(
     res.flags.append("Sim tip reuse enabled; on hardware use fresh tips per reagent addition.")
 
     # ======================================================================
-    # STAGE W1 -- whole-genome amplification (whole-genome amplification).  src: [A].
+    # STAGE W1 -- Single-cell WGA. src: [A].
     # ======================================================================
     wga = p.protocol["wga"]
     lysis = wga["lysis_mix"]
@@ -258,7 +258,7 @@ async def run_workflow(
         _program_to_protocol({"steps": wga["amplification_program"]["steps"]}),
         block_max_volume=float(lysis["add_to_well_ul"]) + float(rxn["add_to_well_ul"]),
     )
-    res.steps.append("ODTC WGA (PTA): 30 C 2.5 h -> 65 C 3 min -> 4 C hold (src: [A] Table 1)")
+    res.steps.append("ODTC WGA: 30 C 2.5 h -> 65 C 3 min -> 4 C hold (src: [A] Table 1)")
     res.safe_stops.append(wga["safe_stop"])
 
     # ======================================================================

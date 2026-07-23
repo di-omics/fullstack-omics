@@ -1,4 +1,4 @@
-"""QC gates + tacit guards, traced to the whole-genome sequencing [A] and NEBNext [B] protocols.
+"""QC gates + tacit guards, traced to the WGA [A] and NEBNext [B] protocols.
 
 Gates evaluate simulated (or, on hardware, measured) values and return PASS / FLAG /
 FAIL. Guards enforce the protocols' unwritten-but-critical rules -- exact bead ratios,
@@ -37,7 +37,7 @@ class GuardViolation(RuntimeError):
 
 def guard_bead_ratio(stage: str, expected: float, actual: float, tol: float = 1e-6) -> None:
     """SPRI ratios are exact: NEBNext size-selection 0.4X/0.2X, cleanup 0.7X, PCR
-    cleanup 0.8X (src: [B]); whole-genome sequencing final pool 0.75X (src: [A])."""
+    cleanup 0.8X (src: [B]); WGA workflow final pool 0.75X (src: [A])."""
     if abs(expected - actual) > tol:
         raise GuardViolation(
             f"{stage}: SPRI bead ratio {actual} != protocol {expected}. "
@@ -109,7 +109,7 @@ def gate_ntc(ntc_yields_ng: dict, p) -> QCResult:
 
 
 def gate_wga_fragment_size(sizes_bp: dict, p) -> QCResult:
-    """WGA product size (src: [A] Appendix A): whole-genome amplification amplicons ~250-3500 bp, avg ~1275 bp.
+    """WGA product size (src: [A] Appendix A): WGA fragments ~250-3500 bp, avg ~1275 bp.
     Flag wells outside the expected range."""
     lo, hi = [float(x) for x in p.protocol["wga_qc"]["sizing"]["fragment_range_bp"]]
     flagged = [w for w, s in sizes_bp.items() if not (lo <= s <= hi)]

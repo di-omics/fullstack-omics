@@ -2,8 +2,8 @@
 # reagents.yaml  --  Bill of Materials (kit-based) for single-cell WGS
 # =============================================================================
 # Sources:
-#   [A] ResolveDNA Whole Genome Single-Cell Core Kit, 96-well -- Kit Contents +
-#       "Additional Equipment, Materials, and Reagents" (BioSkryb TAS-068.5).
+#   [A] Supplier-provided single-cell WGA protocol (96-well, proprietary, RUO) --
+#       kit contents plus additional equipment, materials, and reagents.
 #   [B] NEBNext Ultra II DNA Library Prep Kit for Illumina -- Kit Components +
 #       "Required Materials Not Included" (NEB E7645/E7103 manual).
 #
@@ -11,9 +11,10 @@
 # mostly "buy the kit." Individual component part numbers are recorded for
 # traceability but you order the kit, not the components.
 #
-# Catalog numbers are transcribed from the vendor guides. Where a guide does not
-# state a value (e.g. the ResolveDNA WHOLE-kit ordering number), the field is
-# `# TODO: expert value`. RESEARCH USE ONLY.
+# Public catalog numbers are transcribed from authorized guides. WGA supplier, SKU, and
+# channel data is supplied through ignored private/local configuration and is
+# non-orderable here. Other guide omissions use `# TODO: expert value`.
+# RESEARCH USE ONLY.
 #
 # scale rules used by procurement/bom.py:
 #   per_kit    -> one kit per `plate_capacity` (96) samples  = ceil(n/96)
@@ -26,38 +27,39 @@
 meta:
   currency: "USD"
   note: "Pack sizes / list prices are not in the guides; leave price null, fill from vendor quote."
+  private_override: "reagents.local.yaml"
 
 # -----------------------------------------------------------------------------
-# WGA -- ResolveDNA Whole Genome Single-Cell Core Kit (96-well).  src: [A].
+# WGA -- single-cell whole-genome amplification kit (96-well). src: [A].
 # Order the KIT (one part number); components listed under `contains` for traceability.
 # -----------------------------------------------------------------------------
 wga_kit:
-  - name: "ResolveDNA Whole Genome Single-Cell Core Kit, 96-Well Format"
-    vendor: "BioSkryb Genomics"
-    catalog: "# TODO: expert value"        # whole-kit ordering number not stated in TAS-068.5;
-                                           # contact sales@bioskryb.com / see product page. Verify.
+  - name: "Single-cell whole-genome amplification kit, 96 reactions"
+    vendor: "# REQUIRED: configure supplier privately"
+    catalog: "# REQUIRED: configure supplier SKU privately"
+    purchase_channel: verify
     verify: true
-    verify_note: "TAS-068.5 lists component part numbers but not a single whole-kit catalog #. Confirm the orderable kit SKU with BioSkryb."
+    verify_note: "Set supplier, SKU, and purchase channel in reagents.local.yaml."
     scale: per_kit
     note: "One kit = 96 reactions; includes 96 UDI adapters. src: [A] Product Description."
-    contains:                              # src: [A] Kit Contents table (part #, cap color)
-      - {name: "L1 Reagent", part: "100628", cap: "purple"}
-      - {name: "L2 Reagent", part: "100581", cap: "yellow"}
-      - {name: "L3 Reagent", part: "100523", cap: "white"}
-      - {name: "R1 Reagent", part: "100521", cap: "blue"}
-      - {name: "R2 Reagent", part: "100527", cap: "red"}
-      - {name: "Control Genomic DNA (50 ng/uL)", part: "101155", cap: "gold"}
-      - {name: "Cell Buffer", part: "100574", cap: "clear"}
-      - {name: "Single Use Library Adapter Set (96 UDI)", part: "100940 (or 100941-100947)", cap: "plate"}
-      - {name: "Resolve Beads", part: "100735", cap: "bottle"}
-      - {name: "Elution Buffer", part: "100736", cap: "bottle"}
-      # NOTE: the kit also ships BioSkryb Universal Library Prep reagents (LP0B 100833,
-      # LP0E 100791, LP1B 100677, LP1E 100680, LP2L 100683, LP3A 100686, LP3P 100689).
-      # This workflow uses NEBNext for library prep instead, so those go UNUSED here.
+    contains:                              # src: [A] Kit Contents table (cap color)
+      - {name: "Lysis reagent 1", cap: "purple"}
+      - {name: "Lysis reagent 2", cap: "yellow"}
+      - {name: "Lysis reagent 3", cap: "white"}
+      - {name: "Amplification reagent 1", cap: "blue"}
+      - {name: "Amplification reagent 2", cap: "red"}
+      - {name: "Control genomic DNA (50 ng/uL)", cap: "gold"}
+      - {name: "Cell Buffer", cap: "clear"}
+      - {name: "Single-use library adapter set (96 UDI)", cap: "plate"}
+      - {name: "Magnetic beads", cap: "bottle"}
+      - {name: "Elution Buffer", cap: "bottle"}
+      # This workflow uses NEBNext for library prep; any bundled alternative
+      # library-preparation reagents are not used here.
 
 # -----------------------------------------------------------------------------
 # Library prep -- NEBNext Ultra II DNA Library Prep Kit.  src: [B].
-# Use E7103 (includes Sample Purification Beads) OR E7645 (no beads; buy SPRIselect).
+# Use E7103 (includes Sample Purification Beads) OR E7645 with separately configured
+# SPRI magnetic cleanup beads.
 # -----------------------------------------------------------------------------
 libprep_kit:
   - name: "NEBNext Ultra II DNA Library Prep Kit for Illumina (96 rxn, WITH beads)"
@@ -69,7 +71,7 @@ libprep_kit:
     vendor: "New England Biolabs"
     catalog: "E7645L"                      # src: [B] "#E7645L ... 96 reactions"
     optional: true
-    note: "Alternative to E7103L; if used, also buy SPRIselect/AMPure below. src: [B]."
+    note: "Alternative to E7103L; if used, also configure compatible SPRI cleanup beads below. src: [B]."
     scale: per_kit
   - name: "NEBNext Multiplex Oligos for Illumina (Unique Dual Index UMI Adaptors DNA)"
     vendor: "New England Biolabs"
@@ -77,12 +79,15 @@ libprep_kit:
     verify: true
     verify_note: "NEBNext UMI adaptor oligo SKU depends on plex/set (see neb.com/oligos). Required by [B] 2.2. Pick the set matching your plate count."
     scale: per_kit
-    note: "The UMI adaptors used in [B] End Prep/Ligation. NOT the ResolveDNA adapters."
-  - name: "SPRIselect Reagent Kit"
-    vendor: "Beckman Coulter"
-    catalog: "B23317"                      # src: [B] Required Materials (for E7645 only)
+    note: "The UMI adaptors used in [B] End Prep/Ligation, not bundled WGA-kit adapters."
+  - name: "SPRI magnetic cleanup bead reagent"
+    vendor: "# REQUIRED: configure supplier privately"
+    catalog: "# REQUIRED: configure supplier SKU privately"
+    purchase_channel: verify
+    verify: true
+    verify_note: "Set a compatible bead supplier, SKU, and purchase channel in reagents.local.yaml."
     optional: true
-    note: "Only needed with E7645 (E7103 already includes beads). src: [B]. AMPure XP A63881 also works."
+    note: "Only needed with E7645; E7103 already includes cleanup beads. Confirm compatibility with [B]."
     scale: per_run
   - name: "NEBNext Library Quant Kit for Illumina (qPCR, optional)"
     vendor: "New England Biolabs"
@@ -135,13 +140,39 @@ readiness_reagents:
     scale: per_plate
 
 # -----------------------------------------------------------------------------
-# BioSkryb accessory hardware / consumables.  src: [A] "Products from BioSkryb".
+# WGA accessory hardware / consumables. src: [A].
 # -----------------------------------------------------------------------------
-bioskryb_accessories:
-  - {name: "ResolveDNA PTA-Grade Cell Buffer Pack (12x 500 uL)", vendor: "BioSkryb", catalog: "100177", scale: per_run, optional: true}
-  - {name: "ResolveDNA Elution Buffer pH 8.5 (12x 500 uL)",      vendor: "BioSkryb", catalog: "100178", scale: per_run, optional: true}
-  - {name: "Low Bind 96-Well PCR Plates",                        vendor: "BioSkryb", catalog: "100149", scale: per_plate}
-  - {name: "ResolveDNA Magnetic Plate",                          vendor: "BioSkryb", catalog: "100135", scale: once}
+wga_accessories:
+  - name: "WGA-grade Cell Buffer Pack (12x 500 uL)"
+    vendor: "# REQUIRED: configure supplier privately"
+    catalog: "# REQUIRED: configure supplier SKU privately"
+    purchase_channel: verify
+    verify: true
+    verify_note: "Set supplier, SKU, and channel in reagents.local.yaml."
+    scale: per_run
+    optional: true
+  - name: "WGA Elution Buffer pH 8.5 (12x 500 uL)"
+    vendor: "# REQUIRED: configure supplier privately"
+    catalog: "# REQUIRED: configure supplier SKU privately"
+    purchase_channel: verify
+    verify: true
+    verify_note: "Set supplier, SKU, and channel in reagents.local.yaml."
+    scale: per_run
+    optional: true
+  - name: "Low Bind 96-Well PCR Plates"
+    vendor: "# REQUIRED: configure supplier privately"
+    catalog: "# REQUIRED: configure supplier SKU privately"
+    purchase_channel: verify
+    verify: true
+    verify_note: "Set supplier, SKU, and channel in reagents.local.yaml."
+    scale: per_plate
+  - name: "WGA Magnetic Plate"
+    vendor: "# REQUIRED: configure supplier privately"
+    catalog: "# REQUIRED: configure supplier SKU privately"
+    purchase_channel: verify
+    verify: true
+    verify_note: "Set supplier, SKU, and channel in reagents.local.yaml."
+    scale: once
 
 # -----------------------------------------------------------------------------
 # General consumables (third-party).  src: [A] "Products from Third-Party Suppliers".
@@ -166,5 +197,5 @@ sorter_consumables:
     vendor: "BD Biosciences"
     catalog: "# TODO: expert value"
     verify: true
-    verify_note: "Sorter consumable, not in the ResolveDNA/NEB guides. Confirm from the BD FACS Melody user guide."
+    verify_note: "Sorter consumable, not in the WGA/NEB guides. Confirm from the BD FACS Melody user guide."
     scale: per_run

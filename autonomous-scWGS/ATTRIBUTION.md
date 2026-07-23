@@ -1,72 +1,70 @@
-# Attribution
+# Attribution and third-party methods
 
-This skill automates two third-party laboratory kits and a cell sorter. Unlike the
-sibling `flashseq-skill` (whose method is CC-BY), **these methods are proprietary
-vendor protocols released for RESEARCH USE ONLY. They are not open-licensed.**
+This module automates third-party laboratory methods and integrates an external analysis
+pipeline. The laboratory methods are proprietary, research-use-only supplier protocols;
+they are not open-licensed.
 
-## Methods (proprietary -- RESEARCH USE ONLY)
+## Methods
 
-### [A] Whole Genome Amplification -- ResolveDNA (PTA)
-> BioSkryb Genomics. *ResolveDNA Whole Genome Single-Cell Core Kit, 96-Well Format --
-> Protocol to Prepare WGS-Ready Libraries.* User Guide **TAS-068.5** (05/2025).
+### [A] Single-cell whole-genome amplification
 
-ResolveDNA(R) and BaseJumper(R) are registered trademarks of BioSkryb, Inc. PTA (Primary
-Template-directed Amplification) is BioSkryb's proprietary chemistry (PNAS 2021, 118(24)
-e2024176118).
+The WGA stages, reagent handling, quality-control checkpoints, and sequencing-depth
+guidance are based on authorized supplier documentation for a proprietary 96-well
+single-cell WGA workflow. Obtain the current protocol from the authorized supplier and
+verify every value before a real run.
 
 ### [B] Library preparation -- NEBNext Ultra II
+
 > New England Biolabs. *NEBNext Ultra II DNA Library Prep Kit for Illumina*
 > (NEB **#E7645/#E7103**). Instruction Manual **v2.0 (5/23)**.
 
 NEBNext(R) is a registered trademark of New England Biolabs, Inc.
 
-### [C] Sequencing analysis -- BaseJumper BJ-WGS
-> BioSkryb Genomics. *BJ-WGS* Nextflow pipeline. `https://github.com/BioSkryb/bj-wgs`
-> (release 2.1.0). **BioSkryb proprietary LICENSE** (Terms & Conditions), NOT open source.
+### [C] Sequencing analysis
 
-BJ-WGS is **included as a git submodule** at `autonomous-scWGS/bj-wgs`, pinned to release
-2.1.0 (see `.gitmodules`). A submodule stores only a **pointer** to BioSkryb's public repo
-at that commit -- this repository does **not** copy or redistribute BioSkryb's code, and no
-BJ-WGS files are committed here. Fetching it (`git submodule update --init --recursive`)
-downloads it from BioSkryb directly, subject to **BioSkryb's own license/terms**. Running it
-additionally requires a **Sentieon** license (commercial; eval/pass-through via a BioSkryb
-helpdesk ticket). The `result/` stage generates the `input.csv` + `run_bj_wgs.sh` that drive
-this included pipeline.
+The result stage emits `input.csv` and `run_wgs_analysis.sh` for a compatible external WGS
+Nextflow pipeline supplied through `WGS_PIPELINE_DIR`. The pipeline is not bundled or
+fetched by this repository and remains subject to its own license and terms. Running the
+generated workflow also requires separately installed tools and a valid Sentieon license.
+Public code identifies this contract as `WGS-ANALYSIS-INTERFACE-C` version `C-1.0`; the
+private source-record interface is documented in [references/source_map.md](references/source_map.md).
 
 ### Sort -- BD FACS Melody
+
 > BD Biosciences. BD FACS Melody cell sorter (driven by BD FACSChorus).
 
 BD FACSChorus has no open API, so the Melody control plane is reverse-engineered with
-**computer vision + UI automation** of FACSChorus (di-omics CV stack: `lab-cv`,
-`awesome-wetlab-cv`). Until that client is wired into `FacsMelodyHardwareBackend`, sorting
-is **simulated** in this skill. See the README "Integration roadmap".
+computer vision and UI automation. Until that client is wired into
+`FacsMelodyHardwareBackend`, sorting is simulated in this module.
 
-## What this repo does and does NOT do
+## What this repository does
 
-- **Records** reagent names, volumes, temperatures, times, cycle counts, and bead ratios
-  in `config/*.yaml`, each annotated with its source (`# src: [A] Table N` / `# src: [B]
-  Section N`), so an automated workflow can reproduce the protocol. Values not present in
-  a guide are marked `# TODO: expert value` -- **never invented**.
-- **Does NOT** redistribute the vendor user guides, and grants no rights to them. Obtain
-  the guides from BioSkryb / NEB directly. **Verify every value against the source guide
-  before a real run.**
+- Records reagent roles, volumes, temperatures, times, cycle counts, and bead ratios in
+  `config/*.yaml`, annotated with `# src: [A]` or `# src: [B]`.
+- Marks values absent from authorized documentation as `# TODO: expert value`.
+- Does not redistribute supplier manuals or grant rights to third-party methods, software,
+  trademarks, or documentation.
+- Requires users to verify all protocol values against authorized source documentation
+  before a real run.
+- Uses neutral source IDs and an ignored local source map for private supplier, document,
+  and license records; see [references/source_map.md](references/source_map.md).
 
-## Code (MIT)
+## Code license
 
-The autonomous-scWGS code (generators, PyLabRobot automation, sort/ops/readiness
-modules, CLIs, tests) is original work licensed under the MIT License -- see `LICENSE`.
+The autonomous-scWGS generators, PyLabRobot automation, sorting, operations, readiness
+modules, command-line scripts, and tests are original code licensed under the MIT License.
+That license does not apply to third-party laboratory methods, pipeline software, manuals,
+or other supplier materials.
 
 ## Third-party tools
 
-- **PyLabRobot** -- hardware abstraction + simulator (see its own license).
-- **Sequencing analysis** uses **BaseJumper BJ-WGS** (BioSkryb, `github.com/BioSkryb/bj-wgs`;
-  see that repo's own LICENSE) [C]. It is a Nextflow pipeline requiring external, unbundled
-  tools: Java, Nextflow, Docker, AWS CLI, and **Sentieon** (commercial; eval/pass-through
-  license via a BioSkryb helpdesk ticket), plus SnpEff, VCFeval, BCFtools, Seqtk. This skill
-  only generates the `input.csv` and the `nextflow run` command; it does not redistribute or
-  modify BJ-WGS.
+- **PyLabRobot** -- hardware abstraction and simulator; see its own license.
+- **WGS analysis pipeline** -- compatible external Nextflow software supplied by the user
+  and governed by its own license.
+- **Analysis dependencies** -- Java, Nextflow, Docker, AWS CLI, Sentieon, SnpEff, VCFeval,
+  BCFtools, Seqtk, and MultiQC; each remains separately licensed.
 
 ## Disclaimer
 
-**RESEARCH USE ONLY -- not clinically validated.** This skill is not affiliated with or
-endorsed by BioSkryb Genomics, New England Biolabs, BD Biosciences, or Hamilton.
+**RESEARCH USE ONLY -- not clinically validated.** This module is not affiliated with or
+endorsed by New England Biolabs, BD Biosciences, Hamilton, or any WGA protocol supplier.

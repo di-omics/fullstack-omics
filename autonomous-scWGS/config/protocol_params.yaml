@@ -1,12 +1,11 @@
 # =============================================================================
-# protocol_params.yaml  --  single-cell WGS: ResolveDNA PTA WGA + NEBNext Ultra II
+# protocol_params.yaml  --  single-cell WGS: whole-genome amplification + NEBNext Ultra II
 # =============================================================================
 # SOURCES OF TRUTH (two stitched protocols):
-#   [A] ResolveDNA Whole Genome Single-Cell Core Kit, 96-Well Format.
-#       BioSkryb Genomics, User Guide TAS-068.5 (05/2025). WGA (PTA) + sample prep.
+#   [A] Supplier-provided single-cell whole-genome amplification protocol
+#       (96-well, proprietary, research use only). WGA + sample preparation.
 #   [B] NEBNext Ultra II DNA Library Prep Kit for Illumina (NEB #E7645/#E7103),
-#       Instruction Manual v2.0 (5/23). Library prep AFTER the PTA WGA (replaces
-#       the ResolveDNA Universal Library Prep, per the user's workflow).
+#       Instruction Manual v2.0 (5/23). Library prep after WGA.
 #
 # The FACS sort up front is a BD FACS Melody (control-plane reverse-engineered by
 # the user; see instruments.yaml). Deck: Hamilton STAR + Hamilton ODTC (on-deck
@@ -23,10 +22,14 @@
 # =============================================================================
 
 meta:
-  workflow: "single-cell WGS (PTA)"
-  wga_method: "ResolveDNA PTA (Primary Template-directed Amplification)"
-  wga_source: "BioSkryb ResolveDNA Whole Genome Single-Cell Core Kit, 96-well (TAS-068.5, 05/2025)"
+  workflow: "single-cell whole-genome sequencing (WGS)"
+  wga_method: "single-cell whole-genome amplification (WGA)"
+  wga_source_id: "WGA-SOURCE-A"
+  wga_source_version: "WGA-A-2025-05"
+  wga_source: "authorized supplier documentation for a proprietary 96-well single-cell WGA workflow"
   libprep_method: "NEBNext Ultra II DNA Library Prep for Illumina"
+  libprep_source_id: "LIBPREP-SOURCE-B"
+  libprep_source_version: "B-2.0-2023-05"
   libprep_source: "NEB #E7645/#E7103, Instruction Manual v2.0 (5/23)"
   sort: "BD FACS Melody (FACS/FANS), control-plane RE by user"
   licensing_note: >
@@ -42,12 +45,12 @@ meta:
 # -----------------------------------------------------------------------------
 run:
   n_samples: 96                  # single cells/nuclei + controls in this run (1 plate)
-  plate_format: 96               # protocol is 96-well only (TAS-068.5 title)
+  plate_format: 96               # protocol is 96-well only
   plate_capacity: 96
 
 # -----------------------------------------------------------------------------
 # STAGE S0 -- Single-cell isolation (FACS Melody sort up front).  src: [A] I / II.
-# Cells sorted into 3 uL ResolveDNA Cell Buffer per well (or "dry" then add buffer).
+# Cells sorted into 3 uL Cell Buffer per well (or "dry" then add buffer).
 # -----------------------------------------------------------------------------
 sorting:
   target: "single viable cell (or nucleus) per well"     # src: [A] Sample Selection
@@ -72,7 +75,7 @@ sorting:
     input_volume_ul: 3.0           # src: [A] "control samples ... in 3 uL of Cell Buffer"
 
 # -----------------------------------------------------------------------------
-# STAGE W1 -- ResolveDNA Whole Genome Amplification (PTA).  src: [A] WGA Procedure.
+# STAGE W1 -- Single-cell whole-genome amplification (WGA). src: [A] WGA Procedure.
 # Two master mixes (Lysis, Reaction) + a 2.5 h isothermal amplification.
 # -----------------------------------------------------------------------------
 wga:
@@ -140,14 +143,14 @@ wga_qc:
     ntc_max_ng: 10                     # TODO: expert value -- NTC contamination ceiling. Tune.
 
 # -----------------------------------------------------------------------------
-# STAGE L -- NEBNext Ultra II DNA Library Prep.  src: [B]. Input = the PTA WGA
+# STAGE L -- NEBNext Ultra II DNA Library Prep.  src: [B]. Input = the WGA
 # product (already a broad fragment pool ~250 bp-3.5 kb; no separate shear step).
 # -----------------------------------------------------------------------------
 libprep:
   input:
     dna_input_note: >
       NEBNext Ultra II is NOT a fragmentation kit -- it end-repairs pre-fragmented
-      DNA. The PTA WGA product is already fragmented (~250 bp-3.5 kb), so it feeds
+      DNA. The WGA product is already fragmented (~250 bp-3.5 kb), so it feeds
       End Prep directly.  # src: [B] Starting Material + [A] Fig 2.
     dna_input_ng: 100                  # expert-tunable: [B] supports 500 pg-1 ug fragmented
                                        # DNA into End Prep. WGA yields ~800 ng; 100 ng is a
@@ -302,25 +305,23 @@ sequencing:
     purpose: "SNV / structural variation"                 # src: [A] Appendix C
 
 # -----------------------------------------------------------------------------
-# Sequencing analysis -- BaseJumper BJ-WGS (the vendor Nextflow pipeline for
-# ResolveDNA / PTA data).  src: [C] BioSkryb/bj-wgs GitHub README (release 2.1.0).
-# This is the fastq-to-variants pipeline; the result/ stage generates its input.csv
-# and the exact `nextflow run` command. It is a Nextflow + Docker + Sentieon
-# pipeline (external), not bundled here.
+# Sequencing analysis -- configurable external WGS Nextflow pipeline. src: [C]
+# compatible pipeline interface documentation. The result/ stage generates input.csv
+# and a `nextflow run` command. The pipeline is external and not bundled here.
 # -----------------------------------------------------------------------------
 analysis:
-  pipeline: "BaseJumper BJ-WGS"                 # src: [C]
-  repo: "https://github.com/BioSkryb/bj-wgs"    # src: [C]
-  entrypoint: "nextflow run main.nf"            # src: [C]
-  included_as: "git submodule (pinned to release 2.1.0)"   # vendored by reference; see .gitmodules
-  submodule_path: "autonomous-scWGS/bj-wgs"     # relative to the fullstack-omics repo root
-  pin: "2.1.0"                                   # BioSkryb release tag the submodule points at
+  pipeline: "WGS Nextflow analysis pipeline"     # src: [C]
+  interface_id: "WGS-ANALYSIS-INTERFACE-C"
+  interface_version: "C-1.0"
+  entrypoint: "main.nf"                          # src: [C]
+  pipeline_dir_env: "WGS_PIPELINE_DIR"           # compatible checkout supplied at runtime
+  dnascope_model_env: "DNASCOPE_MODEL"            # required at runtime; no public default
   # Pipeline steps + tools (src: [C] Pipeline Overview).
   steps:
     - "SENTIEON BWA MEM: map reads to reference"                        # src: [C]
     - "SENTIEON LocusCollector + Dedup: remove duplicate reads"        # src: [C]
     - "SENTIEON BQSR: base quality score recalibration"                # src: [C]
-    - "variant calling: DNAScope (default) or Haplotyper"              # src: [C]
+    - "variant calling: DNAScope or Haplotyper"                        # src: [C]
     - "variant annotation: SnpEff + ClinVar + dbSNP"                   # src: [C]
     - "SENTIEON metrics: alignment, GC bias, insert size, coverage"    # src: [C]
     - "VCFeval: analytical performance (GIAB HG001-HG007 only)"        # src: [C]
@@ -329,10 +330,6 @@ analysis:
   genome_default: "GRCh38"                       # src: [C]
   platforms: ["Illumina", "Ultima", "Element"]  # src: [C] --platform (DEFAULT Illumina)
   platform_default: "Illumina"                   # src: [C]
-  dnascope_model_selection: "sentieon"           # src: [C] DEFAULT sentieon;
-                                                 # use "bioskryb129" = PTA-corrected DNAScope
-                                                 # model for Illumina (recommended for PTA).
-  dnascope_model_pta: "bioskryb129"              # src: [C] PTA-corrected model (expert-tunable)
   min_reads: 1000                                # src: [C] --min_reads DEFAULT 1000
   input_csv_columns_illumina: ["biosampleName", "read1", "read2"]         # src: [C]
   input_csv_columns_ultima:   ["biosampleName", "reads", "cram", "crai"]  # src: [C]
@@ -352,7 +349,7 @@ analysis:
     snpeff: "5.1d 2022-04-19"
     vcfeval: "3.12.1"
     bcftools: "1.14"
-  external_deps: ["Java (JDK)", "Nextflow", "Docker", "AWS CLI", "Sentieon license (eval via BioSkryb helpdesk)"]  # src: [C] Running Locally
+  external_deps: ["Java (JDK)", "Nextflow", "Docker", "AWS CLI", "Sentieon license"]  # src: [C] Running Locally
   outputs:                                       # src: [C] Outputs
     alignment: "secondary_analyses/alignment/"
     metrics: "secondary_analyses/metrics/<sample>/"

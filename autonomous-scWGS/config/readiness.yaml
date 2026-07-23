@@ -4,7 +4,7 @@
 # Stage 0 of every run and REQUIRED: prove the Hamilton STAR pipettes precisely at
 # THIS protocol's volume scales BEFORE you spend irreplaceable single cells.
 #
-# PROVENANCE: Rhodamine B QC is NOT part of the whole-genome sequencing / NEBNext protocols --
+# PROVENANCE: Rhodamine B QC is not part of the WGA / NEBNext protocols --
 # it is added by this skill. All values here are ENGINEERING DEFAULTS
 # (`# expert-tunable`), not protocol-sourced. Tune dye concentration + reader gain
 # so the highest-volume wells read in the upper-mid of the Synergy H1 dynamic range
@@ -16,7 +16,7 @@ meta:
   method: "Rhodamine B fluorescence pipetting-precision check"
   metric: "per-well CV across replicate dispenses -> READY vs NEEDS_CALIBRATION"
   required: true
-  applies_to: "Hamilton STAR (all reagent additions in whole-genome amplification + NEBNext libprep)"
+  applies_to: "Hamilton STAR (all reagent additions in WGA + NEBNext libprep)"
 
 # -----------------------------------------------------------------------------
 # Rhodamine B working solution.  Rhodamine B MW ~= 479 g/mol.
@@ -48,7 +48,7 @@ synergy_h1:
 
 # -----------------------------------------------------------------------------
 # Volume ranges to test across the 96-well plate. Each range gets a block of
-# replicate wells; CV is computed per range. Targets bracket the whole-genome sequencing +
+# replicate wells; CV is computed per range. Targets bracket the WGA +
 # NEBNext pipetting volumes (small mix adds -> transfers -> DNA/bead volumes).
 # -----------------------------------------------------------------------------
 volume_ranges:

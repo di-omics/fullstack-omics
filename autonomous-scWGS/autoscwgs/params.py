@@ -1,13 +1,13 @@
-"""Load the protocol-sourced YAML configs -- the single source of truth.
+"""Load the protocol-sourced YAML configs and ignored local ordering overrides.
 
 Everything downstream (sort, BOM, manual, automation, analysis) reads its numbers
-from here so there is exactly one source of truth: `config/*.yaml`, transcribed from
-the whole-genome sequencing (the kit user guide) and NEBNext Ultra II (NEB E7645) user guides.
+from here so public protocol values have one source of truth in `config/*.yaml`.
+Private supplier/SKU/channel data may be supplied by `config/reagents.local.yaml`.
 
 Unlike flashseq-skill, there is NO 384->96 volume multiplier: both protocols are
 natively 96-well with explicit per-reaction volumes. The scaling this module owns is
 master-mix totals: total = per_reaction * n_samples * (1 + overage), with each mix's
-own overage (whole-genome sequencing states 30%; NEB mixes state their own).
+own overage (the WGA mixes use 30%; NEB mixes state their own).
 """
 
 from __future__ import annotations
@@ -28,7 +28,25 @@ CONFIG_DIR = REPO_ROOT / "config"
 
 def _load_yaml(path: Path) -> dict[str, Any]:
     with path.open("r", encoding="utf-8") as fh:
-        return yaml.safe_load(fh)
+        value = yaml.safe_load(fh)
+    if not isinstance(value, dict):
+        raise ValueError(f"Expected a YAML mapping in {path}")
+    return value
+
+
+def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    """Recursively merge a private/local mapping into a public base mapping.
+
+    List values override base values as a unit so a local reagent list cannot accidentally retain
+    unresolved public placeholder entries.
+    """
+    merged = copy.deepcopy(base)
+    for key, value in override.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = _deep_merge(merged[key], value)
+        else:
+            merged[key] = copy.deepcopy(value)
+    return merged
 
 
 @dataclass
@@ -76,7 +94,7 @@ class Params:
                      n: int | None = None) -> float:
         """Master-mix volume to prepare for n reactions, with the mix's own overage.
 
-        Matches the vendor tables: e.g. whole-genome sequencing Lysis Mix 3.0 uL/rxn x 96 x 1.30
+        Matches the protocol tables: e.g. WGA Lysis Mix 3.0 uL/rxn x 96 x 1.30
         = 374.4 ~ 375 uL/96 (Table 2).
         """
         n = self.n_samples if n is None else n
@@ -92,9 +110,13 @@ def _load_cached(config_dir: str) -> Params:
     cdir = Path(config_dir)
     readiness_path = cdir / "readiness.yaml"
     readiness = _load_yaml(readiness_path) if readiness_path.exists() else {}
+    reagents = _load_yaml(cdir / "reagents.yaml")
+    local_reagents_path = cdir / "reagents.local.yaml"
+    if local_reagents_path.exists():
+        reagents = _deep_merge(reagents, _load_yaml(local_reagents_path))
     return Params(
         protocol=_load_yaml(cdir / "protocol_params.yaml"),
-        reagents=_load_yaml(cdir / "reagents.yaml"),
+        reagents=reagents,
         instruments=_load_yaml(cdir / "instruments.yaml"),
         config_dir=cdir,
         readiness=readiness,

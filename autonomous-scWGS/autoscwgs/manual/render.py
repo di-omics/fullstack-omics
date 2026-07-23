@@ -11,9 +11,9 @@ from .wiring import wiring_diagram_ascii
 
 DISCLAIMER = (
     "> **RESEARCH USE ONLY -- not clinically validated.** Volumes/temps/times are "
-    "transcribed from the ResolveDNA (BioSkryb TAS-068.5) and NEBNext Ultra II "
-    "(NEB E7645) user guides -- proprietary vendor protocols. **Verify every value "
-    "against the source guides before a real run.** See ATTRIBUTION.md."
+    "transcribed from an authorized proprietary WGA protocol and the NEBNext Ultra II "
+    "(NEB E7645) user guide. **Verify every value against authorized source "
+    "documentation before a real run.** See ATTRIBUTION.md."
 )
 
 
@@ -84,7 +84,7 @@ def render_manual_markdown(p: Params) -> str:
     L: list[str] = []
     L.append(f"# Single-cell WGS -- Bench Manual  (N = {p.n_samples} samples, 96-well)\n")
     L.append(DISCLAIMER + "\n")
-    L.append("**Workflow:** FACS Melody sort -> ResolveDNA PTA WGA -> post-WGA QC -> "
+    L.append("**Workflow:** FACS Melody sort -> single-cell WGA -> post-WGA QC -> "
              "NEBNext Ultra II library prep -> library QC -> pool -> sequence.\n")
 
     L.append("## 1. Run configuration\n")
@@ -115,7 +115,7 @@ def render_manual_markdown(p: Params) -> str:
              "adapter(6) ligation(7) pcr(8) beads(9) EtOH(10) TE(11) water(12).\n")
 
     wga = p.protocol["wga"]
-    L.append("## 4. Stage W1 -- ResolveDNA WGA (PTA)\n")
+    L.append("## 4. Stage W1 -- Single-cell whole-genome amplification (WGA)\n")
     L.append(_mix_table(p, "Lysis Mix", wga["lysis_mix"]["components"],
                         wga["lysis_mix"]["volume_per_reaction_ul"],
                         wga["lysis_mix"]["overage_fraction"], "src: [A] Table 2"))
@@ -203,7 +203,7 @@ def render_manual_markdown(p: Params) -> str:
     L.append(wiring_diagram_ascii(p))
     L.append("")
     L.append("---")
-    L.append("_WGA: ResolveDNA (BioSkryb TAS-068.5). Library prep: NEBNext Ultra II (NEB E7645). "
+    L.append("_WGA: proprietary supplier protocol. Library prep: NEBNext Ultra II (NEB E7645). "
              "Sort: BD FACS Melody. Skill code: MIT. RESEARCH USE ONLY._")
     return "\n".join(L)
 

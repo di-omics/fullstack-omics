@@ -5,7 +5,7 @@ each item to a channel; everything lands in ONE approval document.
 
 ## Scaling (`procurement/bom.py`)
 
-- `per_kit` -> `ceil(n / 96)` kits (one kit = 96 reactions): whole-genome sequencing core kit, NEBNext
+- `per_kit` -> `ceil(n / 96)` kits (one kit = 96 reactions): single-cell WGA kit, NEBNext
   Ultra II kit, NEBNext UMI adaptor oligos.
 - `per_plate` -> one unit per plate: QC tapes, plate seals, plates.
 - `per_sample` / `per_run` / `once` -> per cell / bulk / one-time (magnet, etc.).
@@ -14,24 +14,31 @@ each item to a channel; everything lands in ONE approval document.
 
 - **browser** - the browser agent fills carts on vendor storefronts (NEB, Thermo Fisher,
   Agilent, Beckman, Eppendorf, Illumina, VWR, Sigma/Millipore).
-- **vendor_direct** - vendors without a public cart: **the vendor** (sales@/orders@bioskryb.com)
-  and **BD Biosciences** (quote). Emit a pre-filled order request.
+- **vendor_direct** - specialty suppliers without a public cart and **BD Biosciences**
+  (quote). Emit a pre-filled order request.
 - **po** - General Lab Supplier + institutional punch-out (Coupa / Jaggaer) fallback.
+- **verify** - unresolved supplier, SKU, channel, or verification state. These entries
+  are not orderable.
 
 ## Approval + ordering (safety)
 
 `approval_summary_markdown()` assembles ONE human-facing document (`output/purchase_approval.md`).
-**Nothing is ordered without a single human `APPROVE`.** `place_orders(items, approved=True)`
-is a **dry run** - it records what *would* be ordered per channel; wiring the live
-browser-cart / the vendor-BD direct / Coupa-Jaggaer PO flows are external deps (marked TODO).
+**Nothing is ordered without a single human `APPROVE`.** Approval alone cannot bypass
+unresolved data: `place_orders(items, approved=True)` refuses the entire batch when any
+entry remains in `verify`, has `verify: true`, or has a blank/placeholder supplier or
+SKU. After local configuration is complete it is still a **dry run** - it records what
+*would* be ordered per channel; wiring the live
+browser-cart / specialty-supplier or BD direct / Coupa-Jaggaer PO flows are external deps
+(marked TODO).
 
 ## Verify-before-ordering
 
-Items whose catalog # a vendor guide does not state carry `verify: true` + a note and appear
-in a dedicated section - e.g. the **whole-genome sequencing whole-kit catalog #** (the guide lists
-component part numbers but not a single orderable SKU), the **NEBNext UMI adaptor** oligo set
-(depends on plex), the **HS D1000** tape, and GLS / FACS Melody consumables. These are
-`# TODO: expert value` - never invented.
+Items whose supplier, catalog number, or channel is not publicly configured carry
+`verify: true` + a neutral note and appear in a dedicated non-orderable section. The WGA
+kit and all four WGA accessory lines remain there until the ignored
+`config/reagents.local.yaml` supplies complete orderable entries. The merge contract and
+example schema are in [source_map.md](source_map.md). Other guide omissions such as the
+NEBNext UMI adaptor set, HS D1000 tape, and general consumables also fail closed.
 
 ## First-time-buyer controller kit (`procurement/controller_kit.py`)
 

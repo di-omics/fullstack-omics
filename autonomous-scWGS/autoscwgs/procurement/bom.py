@@ -35,11 +35,11 @@ class BomItem:
 
 # reagents.yaml list-key -> human category label.
 _CATEGORIES = [
-    ("wga_kit", "WGA kit (ResolveDNA PTA)"),
+    ("wga_kit", "Single-cell WGA kit"),
     ("libprep_kit", "Library prep kit (NEBNext Ultra II)"),
     ("qc_reagents", "Sample & library QC"),
     ("readiness_reagents", "Instrument readiness (Rhodamine B QC)"),
-    ("bioskryb_accessories", "BioSkryb accessories / consumables"),
+    ("wga_accessories", "WGA accessories / consumables"),
     ("consumables", "General consumables"),
     ("sorter_consumables", "FACS Melody sorter consumables"),
 ]
@@ -76,6 +76,11 @@ def build_bom(p: Params, n_samples: Optional[int] = None) -> list[BomItem]:
                     category=category,
                     scale=scale,
                     quantity=_quantity(p, scale, n),
+                    channel=r.get("purchase_channel"),
+                    channel_reason=(
+                        "Explicit purchase channel from the reagent configuration."
+                        if r.get("purchase_channel") else ""
+                    ),
                     verify=bool(r.get("verify", False)),
                     verify_note=r.get("verify_note", ""),
                     optional=bool(r.get("optional", False)),

@@ -1,4 +1,4 @@
-"""Result stage: generate the WGS analysis WGS analysis analysis (input.csv + nextflow runner)."""
+"""Result stage: generate WGS analysis inputs and a Nextflow runner."""
 
 from .pipeline import (
     generate_pipeline,

@@ -32,14 +32,14 @@ from .backends import BackendBundle
 # Reagent / master-mix name -> 1-indexed source column in the reagent-source plate.
 REAGENT_COLUMN = {
     "cell_buffer": 1,       # top-up to 3 uL for dry-sorted wells (src: [A] step 10)
-    "lysis_mix": 2,         # whole-genome sequencing Lysis Mix (L1+L2+L3)
-    "reaction_mix": 3,      # whole-genome sequencing Reaction Mix (R1+R2)
+    "lysis_mix": 2,         # WGA Lysis Mix
+    "reaction_mix": 3,      # WGA Reaction Mix
     "elution_buffer": 4,    # dilute WGA product to 40 uL; general elutions
     "end_prep_mix": 5,      # NEBNext End Prep buffer + enzyme
     "adapter": 6,           # NEBNext UMI adaptor
     "ligation_mix": 7,      # NEBNext Ligation Master Mix + Ligation Enhancer
     "pcr_mix": 8,           # NEBNext Primer Mix + Q5 Master Mix
-    "beads": 9,             # SPRIselect / Resolve Beads
+    "beads": 9,             # SPRI cleanup beads / WGA magnetic beads
     "ethanol": 10,          # 80% EtOH wash
     "te_0_1x": 11,          # 0.1X TE elution
     "water": 12,            # nuclease-free water / general

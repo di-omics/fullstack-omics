@@ -1,6 +1,6 @@
 """A dsDNA (Qubit / Quant-iT HS) signal model so quant/QC are meaningful in sim.
 
-The the vendor protocol quantifies both the WGA product and the final libraries with a
+The WGA workflow quantifies both the amplification product and the final libraries with a
 Qubit fluorometric dsDNA HS assay. The user's deck reads that chemistry on the BioTek
 Synergy H1 instead of a Qubit fluorometer -- which requires a standard curve. This
 module models exactly that:

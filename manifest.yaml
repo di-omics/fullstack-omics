@@ -18,12 +18,12 @@ modules:
   - name: autonomous-scWGS
     assay: "single-cell WGS: whole-genome amplification + NEBNext Ultra II (FACS Melody sort up front)"
     sources:
-      - "ResolveDNA (BioSkryb TAS-068.5) - proprietary / RUO"
-      - "NEBNext Ultra II (NEB E7645) - proprietary / RUO"
-      - "BJ-WGS analysis (BioSkryb/bj-wgs Nextflow) - see repo LICENSE"
+      - "WGA-SOURCE-A / WGA-A-2025-05 - proprietary / RUO"
+      - "LIBPREP-SOURCE-B / B-2.0-2023-05 - proprietary / RUO"
+      - "WGS-ANALYSIS-INTERFACE-C / C-1.0 - separately licensed external pipeline interface"
     license_method: "proprietary (RUO) - not open-licensed like FLASH-seq CC-BY"
     path: "autonomous-scWGS"
-    status: "v0.1 - sort + WGA + libprep + readiness + operator + WGS analysis, end to end in PLR simulator (10/10 tests)"
+    status: "v0.1 - simulated sort + WGA + libprep + readiness + operator; generated external WGS analysis inputs/runner (10/10 tests)"
 
 instruments:
   - id: hamilton_star
@@ -53,7 +53,7 @@ autonomy_layers:
   readiness:    "done: Rhodamine B liquid-handling CV check"
   execution:    "done (sim): full FLASH-seq flow + QC gates/guards"
   ops:          "human done; humanoid experimental"
-  analysis:     "done: scRNAseq fastq-to-analysis (bcl2fastq to umi_tools to STAR to featureCounts to umi_tools count to scanpy); scWGS via a WGS-analysis Nextflow pipeline included as a git submodule pinned to 2.1.0 (Sentieon BWA MEM to Dedup to BQSR to DNAScope to SnpEff to MultiQC)"
+  analysis:     "scRNAseq done locally (bcl2fastq to umi_tools to STAR to featureCounts to umi_tools count to scanpy); scWGS generates and validates inputs plus a fail-closed runner for a runtime-supplied external pipeline, whose execution is outside the simulator"
 
 benchmarks:
   goal: "expert parity at lower cost + hands-on time"

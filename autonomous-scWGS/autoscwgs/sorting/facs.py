@@ -1,6 +1,6 @@
 """BD FACS Melody single-cell sort -- the front of the workflow.
 
-The whole-genome sequencing protocol starts with cells sorted into 3 uL of Cell Buffer per well
+The single-cell WGA protocol starts with cells sorted into 3 uL of Cell Buffer per well
 (FACS/FANS), with column 1 reserved for controls (NTC / 1 ng / 100 pg / 10 pg gDNA)
 per the protocol's plate map (Figure 5). src: [A] Single-Cell Isolation + Best Practices.
 

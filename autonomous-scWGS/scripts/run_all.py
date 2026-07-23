@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""End-to-end demo: all stages wired together in the PLR simulator.
+"""Simulated wet-lab demo plus generated external-analysis handoff.
 
   python scripts/run_all.py --n 16 [--first-time-buyer] [--operator humanoid]
 
-Runs Procurement -> Manual -> Sort+Automation(sim) -> Result and writes every
-artifact to output/. No hardware, no live ordering. RESEARCH USE ONLY.
+Runs Procurement -> Manual -> Sort+Automation(sim) -> Analysis handoff and writes every
+artifact to output/. No hardware, no live ordering, and no external pipeline execution.
+RESEARCH USE ONLY.
 """
 import argparse
 import asyncio
@@ -40,8 +41,8 @@ def main() -> None:
 
     p = load_params().with_run(n_samples=args.n)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    print(f"autonomous-scWGS -- single-cell WGS end-to-end (sim). N={p.n_samples}.")
-    print("WGA: ResolveDNA PTA | Library: NEBNext Ultra II | Sort: FACS Melody")
+    print(f"autonomous-scWGS -- simulated WGS wet-lab flow + analysis handoff. N={p.n_samples}.")
+    print("WGA: single-cell whole-genome amplification | Library: NEBNext Ultra II | Sort: FACS Melody")
     print("RESEARCH USE ONLY -- not clinically validated.")
 
     # -- Procurement ----------------------------------------------------------
@@ -75,14 +76,14 @@ def main() -> None:
         (OUTPUT_DIR / "sort_report.txt").write_text(res.sort.summary(), encoding="utf-8")
 
     # -- Result ---------------------------------------------------------------
-    _hr("Stage 4/4  RESULT (BJ-WGS sequencing analysis)")
-    # Feed the actual sorted sample wells into the WGS analysis input.csv.
+    _hr("Stage 4/4  ANALYSIS HANDOFF")
+    # Feed the actual sorted sample wells into the WGS input.csv.
     sample_wells = res.sort.plan.sample_wells if res.sort is not None else None
     pipe = write_pipeline(p, OUTPUT_DIR, sample_wells=sample_wells)
     print(f"-> {pipe['pipeline']}")
     print(f"-> {pipe['input_csv']}")
-    print("   BJ-WGS (Nextflow): Sentieon BWA MEM -> Dedup -> BQSR -> DNAScope")
-    print("   -> SnpEff/ClinVar/dbSNP -> MultiQC. Deps: Nextflow, Docker, Sentieon license.")
+    print("   Generated only; external analysis has not run.")
+    print("   Runtime config: WGS_PIPELINE_DIR, DNASCOPE_MODEL, SENTIEON_LICENSE.")
 
     _hr("DONE")
     print(f"All artifacts in: {OUTPUT_DIR}")
