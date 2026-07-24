@@ -19,21 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
---------------------------------------------------------------------------------
-
-The MIT license above covers the autonomous-scWGS CODE only.
-
-The underlying laboratory METHODS are third-party, PROPRIETARY vendor protocols
-(RESEARCH USE ONLY), NOT open-licensed. They include a supplier-provided
-single-cell whole-genome amplification workflow and NEBNext Ultra II DNA Library
-Prep for Illumina (NEB #E7645/#E7103).
-
-The external WGS analysis pipeline and all of its dependencies are separately
-licensed and are not included under this MIT grant.
-
-Protocol values recorded in config/*.yaml support automation interoperability.
-This repository does NOT redistribute supplier manuals or grant rights to
-third-party methods, pipeline software, documentation, or trademarks. See
-ATTRIBUTION.md and verify all values against authorized source documentation
-before use.

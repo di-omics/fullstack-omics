@@ -1,262 +1,44 @@
-# =============================================================================
-# protocol_params.yaml  --  FLASH-seq UMI v3 (source of truth for volumes/temps/times)
-# =============================================================================
-# Method: FLASH-seq UMI protocol V.3, Picelli & Hahaut, protocols.io 2022.
-# DOI:     10.17504/protocols.io.bp2l619rdvqe/v3
-# License: CC-BY (method). This YAML is MIT (part of flashseq-skill).
-#
-# EVERY numeric value below is transcribed from the protocol. The step it comes
-# from is noted with `# src: Stage N`. Values the author flags for tuning are
-# marked `# expert-tunable` with the protocol default kept. Anything not present
-# in the protocol is marked `# TODO: expert value` -- never invented.
-#
-# SAFETY: This document was assembled partly from an OCR'd PDF. Verify every
-# per-well volume against the DOI before a real run. RESEARCH USE ONLY.
-# =============================================================================
-
 meta:
-  method: "FLASH-seq UMI"
-  version: "3"
-  doi: "10.17504/protocols.io.bp2l619rdvqe/v3"
-  authors: "Simone Picelli, Vincent Hahaut (IOB Basel)"
-  license_method: "CC-BY"
-  source_note: >
-    Volumes below are the protocol's native 384-well per-well volumes. The
-    protocol states: "When using 96-well plates, we recommend using 5 times
-    larger volume to guarantee successful cell sorting and prevent evaporation
-    issues." (Before start / section notes.)
+  workflow: "single-cell RNA sequencing"
+  public_profile: "simulation_only"
+  actionable_wet_lab_parameters_included: false
+  notice: >
+    This file defines abstract workflow states and unitless synthetic signals. It
+    is not a bench protocol and cannot be translated into physical instructions.
 
-# -----------------------------------------------------------------------------
-# Run configuration -- the only knobs most users touch to scale a run.
-# -----------------------------------------------------------------------------
 run:
-  n_cells: 96                    # number of single cells / wells in this run
-  plate_format: 96               # 96 or 384. See automation.hamilton_default below.
-  # The protocol is written at 384-well / nL volumes (I.DOT + Tecan Fluent).
-  # For 96-well it explicitly recommends 5x volumes. All base volumes in this
-  # file are 384-well; effective volume = base_volume_ul * volume_multiplier.
-  volume_multiplier_by_format:
-    "384": 1.0                   # native protocol volumes; requires nanodispenser
-    "96": 5.0                    # src: "use 5 times larger volume" (Hamilton-friendly)
-  pipetting_overage_fraction: 0.10   # master-mix excess; matches protocol's own
-                                     # 384-well totals (e.g. lysis 1.0 ul/well ->
-                                     # 422.4 ul for 384 wells = 384 * 1.1).
+  n_samples: 96
+  batch_capacity: 96
 
-# -----------------------------------------------------------------------------
-# Stage 1 -- Lysis mix.  src: Stage 1 ("Prepare lysis mix"), 1.000 ul/well (384).
-# reaction_conc kept for the record; volume_ul_384 is what the robot dispenses.
-# -----------------------------------------------------------------------------
-lysis_mix:
-  dispense_volume_ul_384: 1.000          # src: Stage 1 total volume
-  temperature_hold: "on_ice_or_-20C"     # src: Stage 1 ("keep on ice / store -20C")
-  components:
-    - {name: "Triton-X100 (10% v/v)",      reaction_conc: "0.2 %",     volume_ul_384: 0.020}
-    - {name: "dNTP mix (25 mM each)",       reaction_conc: "6 mM each", volume_ul_384: 0.240}
-    - {name: "STRT-P1-T31 oligo (100 uM)",  reaction_conc: "1.8 uM",    volume_ul_384: 0.018}
-    - {name: "RNase inhibitor (40 U/uL)",   reaction_conc: "1.2 U/uL",  volume_ul_384: 0.030}
-    - {name: "DTT (100 mM)",                reaction_conc: "1.2 mM",    volume_ul_384: 0.012}
-    - {name: "dCTP (100 mM)",               reaction_conc: "9 mM",      volume_ul_384: 0.090}
-    - {name: "Betaine (5 M)",               reaction_conc: "1 M",       volume_ul_384: 0.200}
-    - {name: "Nuclease-free water",         reaction_conc: "-",         volume_ul_384: 0.390}
+simulation:
+  seed: 1701
+  readiness:
+    labels: ["input_registration", "workflow_graph", "analysis_contract"]
+    synthetic_pass_score: 0.70
+    synthetic_fail_score: 0.30
+    decision_boundary: 0.50
+  stages:
+    - id: "register_single_cell_inputs"
+      output_state: "inputs_registered"
+    - id: "model_transcript_capture"
+      output_state: "transcript_state"
+    - id: "model_cdna_state"
+      output_state: "cdna_state"
+    - id: "model_library_state"
+      output_state: "library_state"
+    - id: "emit_analysis_handoff"
+      output_state: "analysis_ready"
+  synthetic_quality:
+    center: 0.78
+    spread: 0.12
+    decision_boundary: 0.50
 
-# -----------------------------------------------------------------------------
-# Stage 2 -- Sample collection (single-cell sort into lysis buffer).
-# -----------------------------------------------------------------------------
-sample_collection:
-  sort_target: "single cell into 1 uL lysis buffer per well"   # src: Stage 2
-  seal: "aluminium foil seal"                                  # src: Stage 2
-  storage: "-80 C, process within 6 months"                    # src: Stage 2
-
-# -----------------------------------------------------------------------------
-# Stage 3 -- Cell lysis (thermocycler).  src: Stage 3.
-# -----------------------------------------------------------------------------
-lysis_thermocycler:
-  heated_lid: true                       # src: Stage 3 ("thermocycler with a heated lid")
-  steps:
-    - {name: "lysis",  temperature_c: 72, time_s: 180, cycles: 1}   # src: 72C 3 min
-    - {name: "hold",   temperature_c: 4,  time_s: 0,   cycles: 1}   # src: 4C hold
-  post: "spin down condensation; keep on cool rack; proceed quickly"  # src: Stage 3
-
-# -----------------------------------------------------------------------------
-# Stage 4 -- RT-PCR.  src: Stage 4.  Mix = 4.000 ul/well (384). Program below.
-# -----------------------------------------------------------------------------
-rt_pcr:
-  dispense_volume_ul_384: 4.000          # src: Stage 4 total volume
-  mix_components:
-    - {name: "DTT (0.1 M)",                        reaction_conc: "4.8 mM",  volume_ul_384: 0.238}
-    - {name: "MgCl2 (1 M)",                        reaction_conc: "9.2 mM",  volume_ul_384: 0.046}
-    - {name: "Betaine (5 M)",                      reaction_conc: "800 mM",  volume_ul_384: 0.800}
-    - {name: "RNase inhibitor (40 U/uL)",          reaction_conc: "0.8 U/uL",volume_ul_384: 0.096}
-    - {name: "SuperScript IV (200 U/uL)",          reaction_conc: "2.00 U/uL",volume_ul_384: 0.050}
-    - {name: "Kapa HiFi HotStart ReadyMix (2x)",   reaction_conc: "1x",      volume_ul_384: 2.500}
-    - {name: "TSO-UMI (100 uM)",                   reaction_conc: "1.84 uM", volume_ul_384: 0.092}
-    - {name: "Tn5-ISPCR-F (100 uM)",               reaction_conc: "0.5 uM",  volume_ul_384: 0.025}
-    - {name: "DI-PCR-P1A-R (100 uM)",              reaction_conc: "0.1 uM",  volume_ul_384: 0.005}
-    - {name: "Nuclease-free water",                reaction_conc: "-",       volume_ul_384: 0.148}
-  program:
-    heated_lid: true
-    steps:
-      - {name: "RT",                    temperature_c: 50, time_s: 3600, cycles: 1}    # src: RT 50C 60 min
-      - {name: "initial_denaturation",  temperature_c: 98, time_s: 180,  cycles: 1}    # src: 98C 3 min
-      - name: "pcr_cycles"                                                             # src: [98/65/72] x 20-24
-        cycles: 22               # expert-tunable: protocol says 20-24. 20-21 HEK293T,
-                                 # 23-24 hPBMC. Rule of thumb: start at SMART-seq2 cycle
-                                 # count. Default 22 = midpoint. (src: Stage 4 note *)
-        cycles_range: [20, 24]   # protocol-stated allowable range
-        substeps:
-          - {name: "denaturation", temperature_c: 98, time_s: 20}    # src: 98C 20 sec
-          - {name: "annealing",    temperature_c: 65, time_s: 20}    # src: 65C 20 sec
-          - {name: "elongation",   temperature_c: 72, time_s: 360}   # src: 72C 6 min
-      - {name: "hold",                  temperature_c: 15, time_s: 0,    cycles: 1}    # src: 15C hold
-  safe_stop: "-20 C (amplified cDNA before purification, several months)"              # src: Stage 4 note
-
-# -----------------------------------------------------------------------------
-# Stage 5 -- cDNA cleanup (SPRI 0.6x).  src: Stage 5.
-# -----------------------------------------------------------------------------
-cdna_cleanup:
-  bead_ratio: 0.6                        # src: Stage 5 ("0.6 x ratio")
-  bead_equilibration_min: 15             # src: equilibrate beads at RT 15 min
-  add_water_ul_384: 10.0                 # src: "add 10 uL water to 5 uL cDNA"
-  cdna_input_ul_384: 5.0                 # src: 5 uL amplified cDNA
-  combined_volume_ul_384: 15.0           # src: -> 15 uL
-  beads_volume_ul_384: 9.0               # src: "9 ul beads for each 15 ul cDNA" (=0.6x)
-  incubate_off_magnet_min: 5             # src: 5 min off magnet, RT
-  incubate_on_magnet_min: 5              # src: 5 min on magnet (until clear)
-  ethanol_wash: false                    # src: "not required... we do not recommend it
-                                         #       with liquid handling robots" (bead losses)
-  resuspend_water_ul_384: 15.0           # src: resuspend in 15 uL water
-  resuspend_off_magnet_min: 2            # src: 2 min off magnet
-  resuspend_on_magnet_min: 2             # src: 2 min on magnet
-  transfer_volume_ul_384: 14.0           # src: transfer 14 uL supernatant
-  guard_do_not_overdry: true             # src: "Do not let the bead pellet dry completely"
-  safe_stop: "-20 C (purified cDNA, several months; use LoBind)"   # src: Stage 5 note
-
-# -----------------------------------------------------------------------------
-# Stage 6 -- cDNA QC (Bioanalyzer HS).  src: Stage 6. External/optional.
-# -----------------------------------------------------------------------------
-cdna_qc:
-  method: "Agilent Bioanalyzer High Sensitivity DNA chip"   # src: Stage 6
-  external_tool: true
-  gates:
-    cdna_size_kb_min: 1.8            # src: "average cDNA size of 1.8-2.2 kb"
-    cdna_size_kb_max: 2.2
-    flag_below_bp: 400              # src: "low proportion of fragments <400 bp"
-    residual_primer_bp: 100         # src: "absence of residual primers (ca. 100 bp)"
-
-# -----------------------------------------------------------------------------
-# Stage 7 -- cDNA quantification (PicoGreen on Synergy H1).  src: Stage 7.
-# -----------------------------------------------------------------------------
-cdna_quant:
-  method: "Quant-iT PicoGreen dsDNA assay"        # src: Stage 7 (or Qubit)
-  reader: "BioTek Synergy H1"                      # src: Stage 7 / materials
-  plate: "black 96-well (Nunc F96 black)"          # src: materials
-  fluorescence:
-    excitation_nm: 480     # PicoGreen standard ex/em. # TODO: expert value -- protocol
-    emission_nm: 520       # names PicoGreen but not ex/em; these are the assay-kit
-                           # standard (Quant-iT PicoGreen ex ~480 / em ~520). Verify.
-
-# -----------------------------------------------------------------------------
-# Stage 8 -- Normalization.  src: Stage 8.
-# -----------------------------------------------------------------------------
-normalization:
-  target_concentration_pg_per_ul: 100    # src: Stage 8 ("100 pg/uL")
-  target_volume_ul_384: 1.0              # src: "1 uL of ... 100 pg/uL"
-
-# -----------------------------------------------------------------------------
-# Stage 9 -- Tagmentation + indexing PCR.  src: Stage 9.
-# -----------------------------------------------------------------------------
-tagmentation:
-  atm_volume_ul_384: 0.15                # expert-tunable: protocol says 0.1-0.2 uL ATM
-                                         # for 100 pg/uL cDNA. 0.15 = midpoint. Optimize
-                                         # to land libraries 700-1000 bp. (src: Stage 9)
-  atm_volume_range_ul_384: [0.1, 0.2]    # protocol-stated range
-  td_volume_ul_384: 1.0                  # src: TD (Tagmentation DNA buffer) 1 uL
-  tagmentation_mix_total_ul_384: 1.2     # src: dispense 1.2 uL tagmentation mix
-  normalized_cdna_input_ul_384: 1.0      # src: add 1 uL normalized cDNA (100 pg/uL)
-  tagmentation_program:
-    steps:
-      - {name: "tagmentation", temperature_c: 55, time_s: 480, cycles: 1}   # src: 55C 8 min
-      - {name: "hold",         temperature_c: 4,  time_s: 0,   cycles: 1}   # src: 4C hold
-  neutralization:
-    sds_volume_ul_384: 0.5               # src: "0.5 uL 0.2% SDS"
-    sds_concentration: "0.2 %"           # src: Stage 9
-    incubate_rt_min: 5                   # src: 5 min at RT
-    guard_do_not_rechill: true           # src: "Do not put the plate back on ice"
-  indexing:
-    index_adaptor_volume_ul_384: 1.0     # src: "1 uL N7xx + S5xx Index Adaptors"
-    index_adaptor_concentration_uM: 5    # src: "5 uM each"
-    npm_volume_ul_384: 1.5               # src: "1.5 uL Nextera PCR Mix (NPM)"
-  enrichment_pcr:
-    steps:
-      - {name: "gap_fill",             temperature_c: 72, time_s: 180, cycles: 1}   # src: 72C 3 min
-      - {name: "initial_denaturation", temperature_c: 95, time_s: 30,  cycles: 1}   # src: 95C 30 sec
-      - name: "enrichment_cycles"                                                    # src: [95/55/72] x14
-        cycles: 14           # src: Stage 9 (14 x). Fixed in protocol (not flagged tunable),
-                             # but adjust if under/over-amplifying. See note.
-        substeps:
-          - {name: "denaturation", temperature_c: 95, time_s: 10}   # src: 95C 10 sec
-          - {name: "annealing",    temperature_c: 55, time_s: 30}   # src: 55C 30 sec
-          - {name: "elongation",   temperature_c: 72, time_s: 30}   # src: 72C 30 sec
-      - {name: "hold",                 temperature_c: 15, time_s: 0,   cycles: 1}   # src: 15C hold
-  safe_stop: "-20 C (final unpurified library, several months)"   # src: Stage 9 note
-
-# -----------------------------------------------------------------------------
-# Stage 10 -- Library cleanup (SPRI 0.8x).  src: Stage 10.
-# -----------------------------------------------------------------------------
-library_cleanup:
-  bead_ratio: 0.8                        # src: Stage 10 ("0.8 x")
-  bead_equilibration_min: 15             # src: equilibrate beads at RT 15 min
-  incubate_off_magnet_min: 5             # src: 5 min off magnet, RT
-  incubate_on_magnet_min: 5              # src: 5 min on magnet (until clear)
-  ethanol_wash: true                     # src: "Recommended: wash ... 80% v/v ethanol"
-  ethanol_percent: 80                    # src: 80% v/v ethanol
-  ethanol_volume_ul: 1000                # src: "1 mL of 80% v/v ethanol"
-  ethanol_incubate_s: 30                 # src: 30 s on magnet
-  dry_min: 2                             # src: dry 2 min "or until small cracks appear"
-  guard_dry_until_cracks: true           # src: dry until small cracks (do NOT overdry beyond)
-  elute_water_ul: 50                     # src: "50 uL nuclease-free water"
-  elute_off_magnet_min: 2                # src: 2 min off magnet
-  elute_on_magnet_min: 2                 # src: 2 min on magnet
-  transfer_volume_ul: 49                 # src: "Remove ... 49 uL"
-  qc:
-    method: "Agilent Bioanalyzer HS + Qubit"   # src: Stage 10
-    library_size_bp_target: 800                # src: "average size around 800 bp"
-    library_size_bp_range: [700, 1000]         # src: Stage 9 note (accurate quant -> 700-1000 bp)
-    flag_above_bp: 1000                        # src: ">1000 bp do not bind flow cell efficiently"
-
-# -----------------------------------------------------------------------------
-# Stage 11 -- Pooling & sequencing.  src: Stage 11.
-# -----------------------------------------------------------------------------
-sequencing:
-  platform: "Illumina (NextSeq550 regularly used)"   # src: Stage 11
-  read_mode: "100-8-8-50"                             # src: Stage 11 (regularly used)
-  read_mode_alternatives: ["90-8-8-60", "80-8-8-70"] # src: "might lead to better results"
-  paired_end_recommended: true                        # src: "paired-end reads (recommended)"
-  read1_min_bp: 75                                    # src: "read 1 length should not be <75 bp"
-  read1_preferred_bp: 100                             # src: "preferably >=100 bp"
-
-# -----------------------------------------------------------------------------
-# Stage 12 -- Analysis parameters.  src: Stage 12.
-# -----------------------------------------------------------------------------
 analysis:
-  umi_length_bp: 8                       # src: 12.3 regex (?P<umi_1>.{8})
-  spacer: "CTAAC"                        # src: 12.3 ("spacer sequence is CTAAC"; regex CTAACGG)
-  extract_method: "regex"                # src: 12.3 (--extract-method=regex)
-  genome: "GRCh38 (Gencode v34 primary assembly)"    # src: 12.2 example
-  star_sjdb_overhang_rule: "read_length - 1"          # src: 12.2 (max mate length - 1)
-  featurecounts:
-    feature_type: "exon"                 # src: 12.10 (-t exon)
-    attribute: "gene_name"               # src: 12.10 (-g gene_name)
-    frac_overlap: 0.25                   # src: 12.10 (--fracOverlap 0.25)
-    strand_umi: 1                        # src: 12.10 (-s 1 for UMI reads)
-  samtools_filter_flag: 260              # src: 12.7 (samtools view -F 260)
-  # Downstream single-cell analysis (protocol 12.12 hands off to Seurat/scanpy but
-  # gives NO parameters). These are expert defaults, NOT protocol-sourced.
-  downstream:
-    tool: "scanpy"                       # src: 12.12 (Seurat or scanpy)
-    min_genes_per_cell: 200              # expert default (not in protocol) # TODO: expert value
-    min_cells_per_gene: 3                # expert default (not in protocol) # TODO: expert value
-    max_pct_mito: 20                     # expert default (not in protocol) # TODO: expert value
-    n_top_hvg: 2000                      # expert default (not in protocol) # TODO: expert value
-    n_pcs: 30                            # expert default (not in protocol) # TODO: expert value
-    leiden_resolution: 1.0               # expert default (not in protocol) # TODO: expert value
+  interface_version: "1"
+  inputs: ["read_1_fastq", "read_2_fastq", "reference_index", "gene_annotation"]
+  tool_parameters: "runtime_required"
+
+hardware:
+  local_profile: "validated.local.yaml"
+  execution_adapter: "runtime_required"
+  policy: "deny_without_local_validated_profile"

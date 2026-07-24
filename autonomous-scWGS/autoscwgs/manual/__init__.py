@@ -1,4 +1,4 @@
-"""Printable bench manual (Markdown; optional PDF via pandoc)."""
+"""Non-executable single-cell WGS planning brief."""
 
 from .render import render_manual_markdown, write_manual
 

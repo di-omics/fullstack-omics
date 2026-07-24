@@ -1,17 +1,5 @@
-"""Instrument-readiness QC (Stage 0): Rhodamine B liquid-handling check."""
+"""Synthetic contract readiness for the public WGS simulator."""
 
-from .rhodamine import (
-    ReadinessReport,
-    RangeResult,
-    SynergyH1ReadSettings,
-    RhodamineSimBackend,
-    run_readiness_check,
-)
+from .simulation import CheckResult, ReadinessReport, run_readiness_check
 
-__all__ = [
-    "ReadinessReport",
-    "RangeResult",
-    "SynergyH1ReadSettings",
-    "RhodamineSimBackend",
-    "run_readiness_check",
-]
+__all__ = ["CheckResult", "ReadinessReport", "run_readiness_check"]

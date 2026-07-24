@@ -14,6 +14,7 @@ venv/
 .env
 config/reagents.local.yaml
 config/source_map.local.yaml
+config/validated.local.yaml
 
 # Tooling
 .pytest_cache/

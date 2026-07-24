@@ -1,4 +1,4 @@
-"""Result stage: generate WGS analysis inputs and a Nextflow runner."""
+"""Result stage: generate WGS inputs and a method-agnostic adapter runner."""
 
 from .pipeline import (
     generate_pipeline,

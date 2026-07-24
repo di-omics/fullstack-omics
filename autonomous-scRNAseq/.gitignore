@@ -12,6 +12,8 @@ dist/
 .venv/
 venv/
 .env
+config/reagents.local.yaml
+config/validated.local.yaml
 
 # Tooling
 .pytest_cache/

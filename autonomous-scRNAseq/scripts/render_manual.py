@@ -1,30 +1,21 @@
 #!/usr/bin/env python3
-"""Stage 2 -- Manual: render the printable bench manual (Markdown; optional PDF).
+"""Render the non-executable scRNA-seq workflow planning brief."""
 
-  python scripts/render_manual.py --n 96 [--plate 96|384]
-"""
 import argparse
 
 import _bootstrap  # noqa: F401
 from _bootstrap import OUTPUT_DIR
 
-from flashseq.params import load_params
-from flashseq.manual import write_manual
+from scrnaseq.manual import write_manual
+from scrnaseq.params import load_params
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--n", type=int, default=None)
-    ap.add_argument("--plate", type=int, default=None, choices=[96, 384])
-    args = ap.parse_args()
-
-    p = load_params().with_run(n_cells=args.n, plate_format=args.plate)
-    result = write_manual(p, OUTPUT_DIR)
-    print(f"[manual] Markdown -> {result['markdown']}")
-    if result.get("pdf"):
-        print(f"[manual] PDF -> {result['pdf']}")
-    else:
-        print(f"[manual] PDF skipped: {result.get('pdf_error')}")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--n", type=int, default=16)
+    args = parser.parse_args()
+    result = write_manual(load_params().with_run(n_cells=args.n), OUTPUT_DIR)
+    print(f"[planning] -> {result['markdown']}")
 
 
 if __name__ == "__main__":

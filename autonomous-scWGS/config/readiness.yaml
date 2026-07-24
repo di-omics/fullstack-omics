@@ -1,82 +1,13 @@
-# =============================================================================
-# readiness.yaml  --  Instrument-readiness QC (Rhodamine B liquid-handling check)
-# =============================================================================
-# Stage 0 of every run and REQUIRED: prove the Hamilton STAR pipettes precisely at
-# THIS protocol's volume scales BEFORE you spend irreplaceable single cells.
-#
-# PROVENANCE: Rhodamine B QC is not part of the WGA / NEBNext protocols --
-# it is added by this skill. All values here are ENGINEERING DEFAULTS
-# (`# expert-tunable`), not protocol-sourced. Tune dye concentration + reader gain
-# so the highest-volume wells read in the upper-mid of the Synergy H1 dynamic range
-# (not saturating), and set CV thresholds to your lab's acceptance spec. Verify
-# Rhodamine B ex/em against your H1 filter/mono set. RESEARCH USE ONLY.
-# =============================================================================
-
 meta:
-  method: "Rhodamine B fluorescence pipetting-precision check"
-  metric: "per-well CV across replicate dispenses -> READY vs NEEDS_CALIBRATION"
-  required: true
-  applies_to: "Hamilton STAR (all reagent additions in WGA + NEBNext libprep)"
+  method: "synthetic contract readiness"
+  physical_measurement: false
 
-# -----------------------------------------------------------------------------
-# Rhodamine B working solution.  Rhodamine B MW ~= 479 g/mol.
-# -----------------------------------------------------------------------------
-rhodamine:
-  working_conc_uM: 10.0          # expert-tunable: ~10 uM (~4.8 ug/mL). Pick so the highest
-                                 # target volume reads high-but-not-saturated on the H1.
-                                 # Use H1 auto/extended gain to place the signal in range.
-  working_conc_ug_per_ml: 4.8    # expert-tunable: derived from 10 uM x 479 g/mol.
-  diluent: "PBS or nuclease-free water"   # expert-tunable
-  final_volume_ul: 200.0         # expert-tunable: top each well to a common final volume with
-                                 # diluent AFTER the test dispense, so path length / meniscus is
-                                 # constant across wells. 200 uL suits the larger volumes here.
+checks:
+  - "sample_registry"
+  - "workflow_graph"
+  - "analysis_contract"
 
-# -----------------------------------------------------------------------------
-# Synergy H1 read settings ("code up the synergy plate settings").
-# On hardware these are threaded to SynergyH1Backend; in sim they parameterise the
-# Rhodamine signal model. Rhodamine B peaks ~= ex 553 / em 627 nm.
-# -----------------------------------------------------------------------------
-synergy_h1:
-  read_type: "fluorescence_endpoint"     # expert-tunable
-  optics: "top"                           # top read for a black plate
-  excitation_nm: 540                      # expert-tunable: Rhodamine B ex ~553; 540 is a common
-                                          # practical setting. Match your filter set.
-  emission_nm: 625                        # expert-tunable: Rhodamine B em ~627.
-  gain: "extended"                        # "extended"/auto recommended; or a fixed int. expert-tunable.
-  read_height_mm: 7.0                     # expert-tunable
-  plate: "black flat-bottom 96-well (e.g. Nunc F96 black, cat 237105)"
-
-# -----------------------------------------------------------------------------
-# Volume ranges to test across the 96-well plate. Each range gets a block of
-# replicate wells; CV is computed per range. Targets bracket the WGA +
-# NEBNext pipetting volumes (small mix adds -> transfers -> DNA/bead volumes).
-# -----------------------------------------------------------------------------
-volume_ranges:
-  # target_ul     -> volume the handler dispenses per well for this range
-  # columns       -> 1-indexed plate columns assigned to this range (block of reps)
-  # cv_threshold  -> max acceptable CV% to pass (expert-tunable acceptance spec)
-  - {name: "low",    target_ul: 3.0,  columns: [1, 2, 3, 4],   cv_threshold_pct: 8.0,
-     represents: "small reagent adds: Lysis Mix 3 uL, Cell Buffer 3 uL, Reaction Mix 6 uL, adaptor 2.5 uL"}
-  - {name: "medium", target_ul: 20.0, columns: [5, 6, 7, 8],   cv_threshold_pct: 4.0,
-     represents: "transfers: adaptor-ligated DNA 20 uL, elution transfers 20-33 uL, End Prep buffer/enzyme"}
-  - {name: "high",   target_ul: 50.0, columns: [9, 10, 11, 12], cv_threshold_pct: 3.0,
-     represents: "large volumes: DNA input 50 uL, SPRI beads 40-65 uL"}
-
-# CV thresholds above are expert-tunable acceptance criteria. Liquid-handler precision
-# tightens with volume: small volumes are harder (higher CV allowed), large volumes
-# should be very tight. Set to your lab's validated spec.
-
-# -----------------------------------------------------------------------------
-# Simulation knobs (ignored on hardware). Model the handler's TRUE precision so the
-# demo can show both READY and NEEDS_CALIBRATION outcomes.
-# -----------------------------------------------------------------------------
 simulation:
-  handler_state: "calibrated"    # "calibrated" | "needs_calibration"
-  true_cv_pct:                   # simulated true CV per range for a CALIBRATED handler
-    low: 5.0
-    medium: 2.5
-    high: 1.5
-  needs_calibration_multiplier: 3.0   # bad handler = true_cv * this (fails thresholds)
-  reader_noise_pct: 0.5          # small additive read noise on top of pipetting error
-  rfu_full_scale: 100000.0       # H1-ish full-scale RFU for the sim signal model
-  rfu_blank: 200.0
+  calibrated_score: 0.72
+  needs_review_score: 0.28
+  decision_boundary: 0.50

@@ -1,109 +1,41 @@
-# autonomous-scWGS
+# Autonomous single-cell WGS
 
-Autonomous **single-cell genomics** on a Hamilton / PyLabRobot deck: purchase planning,
-simulated FACS sort, simulated wet-lab execution, and a generated analysis handoff. The
-wet-lab stages run in the PyLabRobot **simulator** with no hardware; the separately
-licensed external analysis pipeline is not executed by the simulator.
+> RESEARCH USE ONLY - not clinically validated.
 
-> **Part of [`fullstack-omics`](..).** This is the single-cell **WGS (DNA)** module:
-> single-cell **whole-genome amplification (WGA)** + **NEBNext Ultra II** library
-> prep (NEB), with a **BD FACS Melody** sort up front. Its sibling module
-> [`autonomous-scRNAseq`](../autonomous-scRNAseq) is the FLASH-seq scRNA-seq pipeline.
+A method-agnostic single-cell WGS preparation-state simulator with a
+runtime-configured computational handoff.
 
-> **RESEARCH USE ONLY - not clinically validated.** The methods use **proprietary vendor
-> protocols** (supplier-provided WGA; NEBNext E7645) reproduced for automation
-> interoperability, **not open-licensed**. Verify every value against the source guides
-> before a real run. See [ATTRIBUTION.md](ATTRIBUTION.md).
-
-## The flow
-
-```
-FACS Melody sort (3 uL Cell Buffer/well, controls col 1)
-  -> Lysis Mix 3 uL + thermal-mix -> Reaction Mix 6 uL + thermal-mix
-  -> ODTC WGA: 30 C 2.5 h -> 65 C 3 min -> 4 C
-  -> dilute to 40 uL -> dsDNA quant on Synergy H1 -> WGA QC gates
-  -> NEBNext End Prep -> Adaptor Ligation -> SPRI size-select (0.4x/0.2x)
-  -> PCR enrichment -> SPRI 0.8x cleanup -> library QC -> pool (0.75x) -> sequence
-  -> generate input.csv + fail-closed runner for a compatible external WGS pipeline
-```
-
-Target deck: **Hamilton STAR** (liquid handler) + **Hamilton ODTC** (on-deck
-thermocycler) + **BioTek Synergy H1** (dsDNA fluorometric quant) + **BD FACS Melody**
-(sort). Backends are swappable (`sim` <-> `hardware`); the sim needs no hardware.
+The public project models orchestration boundaries, not laboratory execution. It
+contains no reagent recipe, supplier selection, physical setting, control map, or
+wet-lab acceptance criterion. All simulation scores are unitless and synthetic.
 
 ## Quickstart
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-python scripts/run_all.py --n 16 --first-time-buyer        # simulation + handoff -> output/
-python tests/test_end_to_end.py                            # 10/10, no hardware
+python scripts/run_all.py --n 16
+python tests/test_end_to_end.py
 ```
 
-> The WGS analysis pipeline is external and separately licensed. Set
-> `WGS_PIPELINE_DIR` to a compatible Nextflow checkout, `DNASCOPE_MODEL` to an explicit
-> model selection, and `SENTIEON_LICENSE` to a valid license file before running the
-> generated analysis script. Analysis also needs Java, Nextflow, Docker, and AWS CLI.
-> Artifact generation and the wet-lab simulator stages need none of those dependencies.
+Generated artifacts:
 
-Per-stage:
+- a functional planning checklist;
+- a non-executable WGS workflow planning brief;
+- a deterministic simulation report;
+- a sample manifest and fail-closed external-analysis runner.
 
-| Stage | Script | Output |
-|---|---|---|
-| 0. Readiness (Rhodamine B QC) | `python scripts/run_readiness.py [--state needs_calibration]` | `output/instrument_readiness.txt` |
-| 0b. FACS sort (sim) | `python scripts/run_sorting.py --n 88` | `output/sort_report.txt` |
-| 1. Procurement | `python scripts/run_procurement.py --n 96 [--first-time-buyer] [--approve]` | `output/purchase_approval.md` |
-| 2. Manual | `python scripts/render_manual.py --n 96` | `output/scwgs_manual.md` |
-| 3. Automation | `python scripts/run_automation.py --n 16 [--operator humanoid]` | `output/automation_run.txt` |
-| 4. Analysis handoff | `python scripts/generate_analysis.py` | `output/run_wgs_analysis.sh` + `output/input.csv` |
+## Hardware boundary
 
-## What's baked in
+`mode=hardware` is denied by default. Physical execution requires ignored
+`config/validated.local.yaml` containing `validated: true` and an
+`execution_adapter` in `module:function` form. That laboratory-owned adapter is
+responsible for all validated method details and safety controls.
 
-- **Stage 0 instrument readiness (REQUIRED):** a **Rhodamine B** liquid-handling QC on
-  the Synergy H1. Dispenses at low/medium/high protocol volume scales across the 96-well
-  plate, computes per-range **CV**, and gates **READY vs NEEDS_CALIBRATION**. The
-  automation refuses to run cells until the STAR passes (fail-closed).
-- **Humanoid ops person (experimental):** `--operator humanoid` compiles each bench task
-  (load the sorter, set up the deck, click run, move plates) into structured manipulation
-  commands - the seam to drop a real humanoid SDK into. Baked in to help labs onboard.
-- **Kit-based procurement:** BOM scaled to N -> one WGA kit + one NEBNext kit per 96
-  -> routed to a purchase channel (browser-agent carts / configured direct / PO) -> **one
-  human approval**. Unresolved supplier/SKU/channel data routes to `verify` and blocks the
-  whole batch. `place_orders()` refuses without resolved private/local configuration and
-  approval, and is a dry-run even when approved.
-- **QC gates + tacit guards:** exact SPRI ratios (0.4x/0.2x/0.8x/0.75x) raise on drift;
-  **do-not-over-dry beads**; **on ice**; **do-not-vortex R2**; **thermal-mix (not vortex)**
-  for plates with cells; **pipette on the well wall**; WGA-yield floor; **NTC contamination
-  fails the run**; fragment-size checks; -20 C safe stops.
+## Analysis boundary
 
-## Source of truth (edit these, not the code)
+The external WGS pipeline checkout, execution profile, sample manifest, output
+location, and any method-specific analysis options are runtime inputs.
 
-- `config/protocol_params.yaml` - volumes, temps, times, cycles, bead ratios, QC gates
-  (every value annotated `# src: [A] ...` / `# src: [B] ...`).
-- `config/reagents.yaml` - kit-based BOM (part numbers; `# TODO` where a guide omits one).
-- `config/reagents.local.yaml` - ignored private supplier/SKU/channel overrides.
-- `config/instruments.yaml` - connectivity registry + PLR backends + controller kit.
-- `config/readiness.yaml` - Rhodamine B QC settings (engineering defaults; `# expert-tunable`).
-- `references/source_map.md` - stable source IDs, private source-map schema, and analysis
-  interface contract.
-
-## Integration roadmap (hardware wiring)
-
-The wet-lab flow and artifact generation run in the PyLabRobot simulator today. External
-analysis execution and hardware operation use their own environments. To take the wet-lab
-flow to hardware:
-
-- **FACS Melody control plane:** BD FACSChorus is a closed GUI with no open API, so the
-  sort is reverse-engineered by **computer vision + UI automation** of FACSChorus - see the
-  di-omics CV stack, [`lab-cv`](https://github.com/di-omics/lab-cv) and
-  [`awesome-wetlab-cv`](https://github.com/di-omics/awesome-wetlab-cv). Drop that client into
-  `autoscwgs/sorting/facs.py` (`FacsMelodyHardwareBackend`); the simulator seam is unchanged.
-- **Hamilton ODTC backend:** PyLabRobot 0.2.x has no ODTC backend. Wire a real **Inheco ODTC
-  backend (TCP/IP, SiLA2)** into the di-omics [`pylabrobot`](https://github.com/di-omics/pylabrobot)
-  fork, then set `instruments.yaml -> hamilton_odtc.plr.backend_hardware`.
-- **NEBNext input / cycles / adaptor dilution / insert size:** `# expert-tunable` with the
-  guide default kept - tune on real data (not a blocker).
-- **Qubit-on-H1 ex/em:** the guides use a Qubit fluorometer; reading that chemistry on the
-  H1 needs a standard curve (ex/em ~485/530, `# TODO: verify` on your filter set).
-
-See `references/` for architecture, procurement, automation, and the protocol-stage tables.
-Sibling module: [`autonomous-scRNAseq`](../autonomous-scRNAseq) (FLASH-seq scRNA-seq, CC-BY method).
+Code is licensed under the MIT License.

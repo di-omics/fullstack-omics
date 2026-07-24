@@ -1,4 +1,4 @@
-"""Make `flashseq` importable when running scripts directly from the repo."""
+"""Make `scrnaseq` importable when running scripts directly from the repo."""
 import sys
 from pathlib import Path
 

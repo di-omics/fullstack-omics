@@ -1,11 +1,7 @@
-# autonomous-scWGS runtime dependencies
-pylabrobot>=0.2.0     # Hamilton STAR + thermocycler (ODTC) + Synergy H1 backends & simulator
-pyyaml>=6.0           # config/*.yaml (source of truth)
+pyyaml>=6.0
 
-# Optional:
-#   pandoc (system package)  -> Markdown -> PDF for the bench manual
-#   pytest                   -> `pytest -q` (tests also run via plain python)
+# Optional test runner:
+# pytest>=7.0
 #
-# Stage 4 analysis calls these EXTERNAL tools (install separately, not pip):
-#   bcl2fastq (Illumina), bwa-mem2 (or bwa), samtools, mosdepth, deepvariant/gatk (deep).
-#   External WGS analysis pipeline and hosted platform -- no local package install.
+# The external WGS pipeline and its tools are installed in the selected analysis
+# environment.

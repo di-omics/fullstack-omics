@@ -19,17 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
---------------------------------------------------------------------------------
-
-The MIT license above covers the flashseq-skill CODE only.
-
-The underlying laboratory METHOD -- the FLASH-seq UMI protocol v3 -- is the work
-of Simone Picelli and Vincent Hahaut (Institute of Molecular and Clinical
-Ophthalmology Basel), published on protocols.io (2022) under a Creative Commons
-Attribution (CC-BY) license:
-
-  DOI: 10.17504/protocols.io.bp2l619rdvqe/v3
-
-See ATTRIBUTION.md. Protocol values reproduced in config/*.yaml are used under
-CC-BY with attribution.

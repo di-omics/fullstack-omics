@@ -1,5 +1,5 @@
-"""Automation: drive the single-cell WGS flow through PyLabRobot (sim or hardware)."""
+"""Public single-cell WGS workflow-state simulator."""
 
-from .workflow import run_workflow, WorkflowResult, InstrumentNotReady
+from .workflow import WorkflowResult, run_workflow
 
-__all__ = ["run_workflow", "WorkflowResult", "InstrumentNotReady"]
+__all__ = ["WorkflowResult", "run_workflow"]
